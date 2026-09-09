@@ -26,6 +26,7 @@ import {
     createCameraMuxWithAnimationAndLock,
 } from '@ue-too/board';
 import { Application, Matrix } from 'pixi.js';
+import { attachBaseTeardown } from './base-teardown';
 
 export interface BaseAppComponents {
     app: Application;
@@ -37,7 +38,13 @@ export interface BaseAppComponents {
     kmtInputStateMachine: StateMachine;
     kmtParser: VanillaKMTEventParser;
     touchParser: TouchEventParser;
+    /** The base teardown (parsers + canvas proxy). Also registered as the
+     *  first entry of `cleanups`; prefer extending via `cleanups.push(…)`
+     *  over replacing this property. */
     cleanup: () => void;
+    /** Teardown extension point: run in order by the React integration on
+     *  unmount, before the Pixi app is destroyed. Push app-level teardown
+     *  (window listeners, preference subscriptions, swapped-in parsers) here. */
     cleanups: (() => void)[];
 }
 
@@ -204,13 +211,12 @@ export const baseInitApp = async (
         }
     });
 
-    const cleanup = () => {
-        kmtParser.tearDown();
-        canvasProxy.tearDown();
-        touchParser.tearDown();
-    };
-
-    return {
+    // The base teardown reads the LIVE parsers off the returned object at
+    // teardown time (apps assign extended parsers onto it after init) and is
+    // registered in `cleanups`, so the React integration runs it even when an
+    // app replaces `cleanup` by spreading these components into its own
+    // object. See base-teardown.ts.
+    return attachBaseTeardown({
         app,
         camera,
         canvasProxy,
@@ -220,7 +226,6 @@ export const baseInitApp = async (
         kmtInputStateMachine,
         kmtParser,
         touchParser,
-        cleanup,
         cleanups,
-    };
+    });
 };
