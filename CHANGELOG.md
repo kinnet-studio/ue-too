@@ -1,3 +1,14 @@
+## 0.18.2 (2026-09-09)
+
+### 🩹 Fixes
+
+- **board-pixi-integration:** cherry-pick #441 + #442 onto the 0.18 line (→ 0.18.2) ([#443](https://github.com/kinnet-studio/ue-too/pull/443), [#441](https://github.com/kinnet-studio/ue-too/issues/441), [#442](https://github.com/kinnet-studio/ue-too/issues/442))
+
+### ❤️ Thank You
+
+- Claude Fable 5.1
+- vee @niuee
+
 ## 0.18.1 (2026-09-08)
 
 ### 🚀 Features

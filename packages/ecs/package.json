@@ -2,7 +2,7 @@
     "name": "@ue-too/ecs",
     "author": "niuee",
     "type": "module",
-    "version": "0.18.1",
+    "version": "0.18.2",
     "description": "Entity Component System for uē-tôo",
     "license": "MIT",
     "repository": {

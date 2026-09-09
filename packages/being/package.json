@@ -1,7 +1,7 @@
 {
     "name": "@ue-too/being",
     "type": "module",
-    "version": "0.18.1",
+    "version": "0.18.2",
     "repository": {
         "type": "git",
         "url": "https://github.com/kinnet-studio/ue-too.git"
