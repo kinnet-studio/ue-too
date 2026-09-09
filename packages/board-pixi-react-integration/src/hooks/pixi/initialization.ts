@@ -5,6 +5,7 @@ import {
 import { useEffect, useRef } from 'react';
 
 import { usePixiCanvas } from '../../contexts/pixi';
+import { teardownComponents } from './teardown';
 
 /**
  * Initializes a Pixi application into a container element and tears it down on
@@ -58,13 +59,11 @@ export const useInitializePixiApp = <T extends InitAppOptions = InitAppOptions>(
 
         let cancelled = false;
 
+        // Runs every registered cleanup, then destroys the app; `removeView`
+        // discards the <canvas> rather than reusing it (3).
         const teardown = (components: BaseAppComponents | null) => {
             if (!components) return;
-            components.cleanup();
-            components.cleanups.forEach(cleanup => cleanup());
-            // `removeView` detaches the <canvas>, so the element (and its
-            // now-lost GL context) is discarded rather than reused (3).
-            components.app.destroy({ removeView: true }, { children: true });
+            teardownComponents(components);
         };
 
         const run = chainRef.current
