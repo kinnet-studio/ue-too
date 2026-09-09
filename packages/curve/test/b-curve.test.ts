@@ -438,13 +438,18 @@ describe('Basic Operation on Bezier Curve', () => {
                 circleCenter,
                 radius
             );
+            // getCircleIntersections refines each hit by binary search and
+            // discards anything farther than its epsilon (0.01 world units)
+            // from the circle — so 0.01 is the accuracy the solver actually
+            // promises. Asserting tighter (toBeCloseTo precision 2 = 0.005)
+            // made this random-input test flake about once in 40 runs.
+            const SOLVER_EPSILON = 0.01;
             testRes.forEach(intersection => {
-                expect(
-                    PointCal.distanceBetweenPoints(
-                        intersection.intersection,
-                        circleCenter
-                    )
-                ).toBeCloseTo(radius, 2);
+                const distance = PointCal.distanceBetweenPoints(
+                    intersection.intersection,
+                    circleCenter
+                );
+                expect(Math.abs(distance - radius)).toBeLessThanOrEqual(SOLVER_EPSILON);
             });
         });
     });
@@ -813,13 +818,18 @@ describe('Basic Operation on Bezier Curve', () => {
                 circleCenter,
                 radius
             );
+            // getCircleIntersections refines each hit by binary search and
+            // discards anything farther than its epsilon (0.01 world units)
+            // from the circle — so 0.01 is the accuracy the solver actually
+            // promises. Asserting tighter (toBeCloseTo precision 2 = 0.005)
+            // made this random-input test flake about once in 40 runs.
+            const SOLVER_EPSILON = 0.01;
             testRes.forEach(intersection => {
-                expect(
-                    PointCal.distanceBetweenPoints(
-                        intersection.intersection,
-                        circleCenter
-                    )
-                ).toBeCloseTo(radius, 2);
+                const distance = PointCal.distanceBetweenPoints(
+                    intersection.intersection,
+                    circleCenter
+                );
+                expect(Math.abs(distance - radius)).toBeLessThanOrEqual(SOLVER_EPSILON);
             });
         });
     });
