@@ -166,6 +166,23 @@ export class CanvasCacheInWebWorker implements Canvas {
 }
 
 /**
+ * Whether a measured dimension came from a canvas that layout has actually
+ * sized.
+ *
+ * @remarks
+ * A canvas inside a `display: none` subtree — a collapsed panel, a tab that
+ * hasn't been shown yet — measures `0`. That zero must never be written back to
+ * the element's inline style: the write is unrecoverable, because the canvas's
+ * own style is what gets measured on the next frame, so a canvas that took its
+ * height from the layout (a flex `stretch`, a percentage) can never get one
+ * again. Zero and the `NaN`/`Infinity` that fall out of dividing by it are all
+ * "not laid out yet", and the right response to all of them is to wait.
+ */
+function isLaidOutSize(value: number): boolean {
+    return Number.isFinite(value) && value > 0;
+}
+
+/**
  * A proxy for the canvas element to prevent constant invoking of the getBoundingClientRect method.
  * @remarks This is mainly used as a proxy to the canvas to prevent invoking the getBoundingClientRect method on the canvas every time a pointer event is triggered or a coordinate conversion is needed. Also to autoscale the canvas buffer depending on the device pixel ratio. It's important to note that in normal circumstances, you would not need to set the size of the canvas manually; you should use the css style width and height to set the size of the canvas.
  * @category Input State Machine
@@ -263,13 +280,18 @@ export class CanvasProxy implements Canvas, Observable<[CanvasDimensions]> {
     }
 
     setCanvasWidth(width: number) {
+        if (!isLaidOutSize(width)) {
+            return;
+        }
         if (
             this._canvas &&
             this._canvas.style.width === '' &&
             this._canvas.style.height === ''
         ) {
             const aspectRatio = this._width / this._height;
-            this._canvas.style.aspectRatio = aspectRatio.toString();
+            if (isLaidOutSize(aspectRatio)) {
+                this._canvas.style.aspectRatio = aspectRatio.toString();
+            }
         }
         if (this._canvas && this._canvas.style.width !== '') {
             this._canvas.width = width * window.devicePixelRatio;
@@ -290,13 +312,18 @@ export class CanvasProxy implements Canvas, Observable<[CanvasDimensions]> {
     }
 
     setCanvasHeight(height: number) {
+        if (!isLaidOutSize(height)) {
+            return;
+        }
         if (
             this._canvas &&
             this._canvas.style.width === '' &&
             this._canvas.style.height === ''
         ) {
             const aspectRatio = this._width / this._height;
-            this._canvas.style.aspectRatio = aspectRatio.toString();
+            if (isLaidOutSize(aspectRatio)) {
+                this._canvas.style.aspectRatio = aspectRatio.toString();
+            }
         }
         if (this._canvas && this._canvas.style.height !== '') {
             this._canvas.height = height * window.devicePixelRatio;

@@ -74,6 +74,10 @@ const STYLES = `
         height: 100%;
         min-width: 0;
         min-height: 0;
+        /* the overlay's viewport caps would inset an inline panel inside its
+           own container; inline mode fills the container it was given */
+        max-width: none;
+        max-height: none;
         border-radius: 0;
         box-shadow: none;
     }
