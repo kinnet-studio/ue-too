@@ -109,7 +109,19 @@ export class MachineDebugger {
         this.graphBoard.attach(this.dom.canvas);
         this.measureCtx = document.createElement('canvas').getContext('2d')!;
         this.dom.pill.addEventListener('click', () => this.open());
-        this.dom.closeButton.addEventListener('click', () => this.close());
+        if (options.container === undefined) {
+            this.dom.closeButton.addEventListener('click', () => this.close());
+        } else {
+            // Inline, the page is the panel: closing it would leave only the
+            // pill. The × collapses the sidebar instead, giving the chart
+            // the full width, and the corner button brings it back.
+            this.dom.closeButton.addEventListener('click', () =>
+                this.dom.setSidebarOpen(false)
+            );
+        }
+        this.dom.showSidebarButton.addEventListener('click', () =>
+            this.dom.setSidebarOpen(true)
+        );
         this.dom.resetButton.addEventListener('click', () =>
             this.resetSelected()
         );
