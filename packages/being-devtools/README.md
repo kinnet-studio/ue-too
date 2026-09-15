@@ -70,6 +70,8 @@ panel.attachBoard(board);
 panel.dispose();
 ```
 
+Inline, the page is the panel, so the sidebar's × hides the sidebar rather than the whole panel; a button in the chart's corner brings it back. Below 640px wide the sidebar stacks under the chart.
+
 ## Console
 
 While any panel is alive, `window.__UE_TOO_BEING__` exposes `machines` (name → machine), `open()`, `close()`, and `attach(machine, options)`.

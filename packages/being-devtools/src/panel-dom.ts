@@ -13,7 +13,10 @@ export type PanelDom = {
     log: HTMLUListElement;
     pill: HTMLButtonElement;
     closeButton: HTMLButtonElement;
+    sidebar: HTMLElement;
+    showSidebarButton: HTMLButtonElement;
     setOpen(open: boolean): void;
+    setSidebarOpen(open: boolean): void;
     setCount(count: number): void;
     destroy(): void;
 };
@@ -55,6 +58,7 @@ const STYLES = `
         display: none;
     }
     .panel {
+        position: relative;
         display: flex;
         width: 60vw;
         height: 55vh;
@@ -87,6 +91,7 @@ const STYLES = `
     canvas {
         flex: 1;
         min-width: 0;
+        min-height: 0;
         display: block;
     }
     .sidebar {
@@ -97,6 +102,56 @@ const STYLES = `
         overflow-y: auto;
         box-sizing: border-box;
         font-size: 14px;
+    }
+    .wrap.sidebar-hidden .sidebar {
+        display: none;
+    }
+    .show-sidebar {
+        display: none;
+        position: absolute;
+        top: 8px;
+        right: 8px;
+        padding: 4px 10px;
+        border: 1px solid #cbd5e1;
+        border-radius: 999px;
+        background: #ffffff;
+        box-shadow: 0 2px 8px rgba(15, 23, 42, 0.12);
+        font: inherit;
+        font-size: 12px;
+        cursor: pointer;
+    }
+    .wrap.sidebar-hidden .show-sidebar {
+        display: inline-flex;
+    }
+    /* Phones: the panel fills the viewport, and the sidebar stacks under the
+       chart instead of squeezing it to a sliver next to a 320px column. */
+    @media (max-width: 640px) {
+        :host(.overlay) {
+            left: 8px;
+            right: 8px;
+            bottom: 8px;
+        }
+        .panel {
+            flex-direction: column;
+            width: 100%;
+            height: 75vh;
+            min-width: 0;
+            min-height: 0;
+        }
+        canvas {
+            /* the board pins an inline width on first measure, which a
+               column layout would honour instead of stretching */
+            width: 100% !important;
+        }
+        .sidebar {
+            width: 100%;
+            flex: 0 0 45%;
+            border-left: none;
+            border-top: 1px solid #e2e8f0;
+        }
+        :host(.inline) .panel {
+            height: 100%;
+        }
     }
     .header {
         display: flex;
@@ -217,6 +272,9 @@ const MARKUP = `
         </button>
         <div class="panel">
             <canvas></canvas>
+            <button class="show-sidebar" type="button" title="Show sidebar">
+                ☰ panel
+            </button>
             <div class="sidebar">
                 <div class="header">
                     <h1>State machines</h1>
@@ -245,10 +303,15 @@ const MARKUP = `
  * Builds the panel's shadow tree. With no `container` the host is a fixed
  * bottom-right overlay appended to `document.body`; with one, the host
  * fills the container.
+ *
+ * Inline, the page *is* the panel, so the header's × is labelled as a
+ * sidebar toggle rather than a close: closing the whole panel would leave
+ * the page showing nothing but the reopen pill.
  */
 export function createPanelDom(options: { container?: HTMLElement }): PanelDom {
     const host = document.createElement('div');
-    host.className = options.container === undefined ? 'overlay' : 'inline';
+    const inline = options.container !== undefined;
+    host.className = inline ? 'inline' : 'overlay';
     const root = host.attachShadow({ mode: 'open' });
     root.innerHTML = MARKUP;
     (options.container ?? document.body).appendChild(host);
@@ -265,6 +328,10 @@ export function createPanelDom(options: { container?: HTMLElement }): PanelDom {
 
     const wrap = query<HTMLDivElement>('.wrap');
     const count = query<HTMLSpanElement>('.count');
+    const closeButton = query<HTMLButtonElement>('.close');
+    if (inline) {
+        closeButton.title = 'Hide sidebar';
+    }
 
     return {
         host,
@@ -277,9 +344,14 @@ export function createPanelDom(options: { container?: HTMLElement }): PanelDom {
         resetButton: query<HTMLButtonElement>('.reset'),
         log: query<HTMLUListElement>('.log'),
         pill: query<HTMLButtonElement>('.pill'),
-        closeButton: query<HTMLButtonElement>('.close'),
+        closeButton,
+        sidebar: query<HTMLDivElement>('.sidebar'),
+        showSidebarButton: query<HTMLButtonElement>('.show-sidebar'),
         setOpen(open) {
             wrap.classList.toggle('open', open);
+        },
+        setSidebarOpen(open) {
+            wrap.classList.toggle('sidebar-hidden', !open);
         },
         setCount(value) {
             count.textContent = String(value);
