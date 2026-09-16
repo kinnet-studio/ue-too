@@ -2,8 +2,11 @@ import {
     EventGuards,
     EventReactions,
     Guard,
+    State,
+    StateExtender,
     TemplateState,
     TemplateStateMachine,
+    createStateExtender,
 } from '@ue-too/being';
 import { PointCal } from '@ue-too/math';
 import type { Point } from '@ue-too/math';
@@ -448,4 +451,73 @@ export function createTouchInputStateMachine(
         'IDLE',
         context
     );
+}
+
+/**
+ * The callback {@link expandTouchInputStateMachine} calls with the stock states.
+ *
+ * @remarks
+ * `stock` holds every built-in touch state already typed for the expanded
+ * machine; `extend` is {@link createStateExtender} bound to the same generics.
+ * Return the full state map for the expanded machine.
+ *
+ * @category Input State Machine - Touch
+ */
+export type TouchInputStateMachineExpansion<
+    E extends TouchEventMapping,
+    C extends TouchContext,
+    S extends string,
+    O extends TouchInputEventOutputMapping & Partial<Record<keyof E, unknown>>,
+> = (
+    stock: Record<TouchStates, State<E, C, S, O>>,
+    extend: StateExtender<E, C, S, O>
+) => Record<S, State<E, C, S, O>>;
+
+/**
+ * Builds a touch input state machine with more events, states, context or
+ * outputs than the stock one, reusing every built-in state.
+ *
+ * @param context - The expanded context; must satisfy {@link TouchContext}
+ * @param define - Receives the stock states and an `extend` helper, returns the
+ * expanded state map. See {@link TouchInputStateMachineExpansion}.
+ * @param initialState - Defaults to `'IDLE'`
+ * @returns A machine over the expanded generics
+ *
+ * @remarks
+ * Same rules as {@link expandKmtInputStateMachine}: every generic must be a
+ * superset of the stock one, `S` must include every {@link TouchStates} member,
+ * and shared events keep the stock payload.
+ *
+ * @category Input State Machine - Touch
+ */
+export function expandTouchInputStateMachine<
+    E extends TouchEventMapping,
+    C extends TouchContext,
+    S extends string,
+    O extends TouchInputEventOutputMapping & Partial<Record<keyof E, unknown>>,
+>(
+    context: C,
+    define: [TouchStates] extends [S]
+        ? TouchInputStateMachineExpansion<E, C, S, O>
+        : { error: 'expanded states must include every TouchStates member' },
+    initialState: S = 'IDLE' as S
+): TemplateStateMachine<E, C, S, O> {
+    const widen = (
+        state: State<
+            TouchEventMapping,
+            TouchContext,
+            TouchStates,
+            TouchInputEventOutputMapping
+        >
+    ) => state as unknown as State<E, C, S, O>;
+    const stock: Record<TouchStates, State<E, C, S, O>> = {
+        IDLE: widen(new IdleState()),
+        PENDING: widen(new PendingState()),
+        IN_PROGRESS: widen(new InProgressState()),
+    };
+    const states = (define as TouchInputStateMachineExpansion<E, C, S, O>)(
+        stock,
+        createStateExtender<E, C, S, O>()
+    );
+    return new TemplateStateMachine<E, C, S, O>(states, initialState, context);
 }
