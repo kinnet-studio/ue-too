@@ -113,5 +113,5 @@ export * from './interface';
 export * from './introspect';
 export * from './vending-machine-example';
 export * from './schema-factory';
-// Hierarchical state machine POC - experimental
-export * from './hierarchical';
+export * from './delegating-state';
+export * from './expansion';
