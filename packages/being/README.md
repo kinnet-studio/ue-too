@@ -7,6 +7,8 @@ This is a library that helps with building finite state machines.
 
 > Disclaimer: I am not an expert on finite state machines; this is just what I use and it works for me, and the features are tailored to what I need. You would probably be better off using a library like [xstate](https://stately.ai/docs).
 
+> Try it live: the vending machine built below is shipped as `createVendingMachine`, and runs in the [state machine visualizer example](https://kinnet-studio.github.io/ue-too/state-machine-visualizer/) — state chart, event log and context inspector, driven by [`@ue-too/being-devtools`](https://github.com/kinnet-studio/ue-too/tree/main/packages/being-devtools).
+
 If you still want to try it out, here is an example of how to use it:
 
 Let's say we want to build a state machine for a vending machine.
