@@ -315,3 +315,75 @@ vendingMachine.happens("selectCoke");
 ```
 
 For the full complete example code, please refer to the `src/vending-machine-example.ts` file.
+
+## Composing state machines
+
+Two helpers cover the cases where one machine is built out of another.
+
+### Widening and extending existing states
+
+At runtime a state only consults its own reactions, so a state written for a small machine works unchanged inside a machine with more events and states: events it does not list come back `handled: false`. The `State` type is invariant in its generics though, so the compiler rejects the registration. `createStateWidener` is the cast for that, guarded so a target that _narrows_ the original is a type error. `extendState` (or `createStateExtender`, which binds the generics once) builds a state for the wider machine out of an existing one plus additions: new or overriding reactions, extra guards, and wrapped `uponEnter` / `beforeExit` hooks.
+
+```ts
+import {
+    TemplateStateMachine,
+    createStateExtender,
+    createStateWidener,
+} from '@ue-too/being';
+
+type BigEvents = SmallEvents & { c: {} };
+type BigStates = SmallStates | 'S3';
+
+const widen = createStateWidener<BigEvents, BigContext, BigStates, BigOut>();
+const extend = createStateExtender<BigEvents, BigContext, BigStates, BigOut>();
+
+const machine = new TemplateStateMachine<
+    BigEvents,
+    BigContext,
+    BigStates,
+    BigOut
+>(
+    {
+        S1: extend(new SmallS1(), {
+            eventReactions: inherited => ({
+                c: { action: startC, defaultTargetState: 'S3' }, // add
+                b: { ...inherited.b!, action: wrap(inherited.b!.action) }, // wrap
+            }),
+            uponEnter: (context, _machine, _from, inherited) => {
+                inherited();
+                context.somethingExtra();
+            },
+        }),
+        S2: widen(new SmallS2()), // reused as is
+        S3: new BigS3(),
+    },
+    'S1',
+    context
+);
+```
+
+Shared event names must keep the same payload in both machines; the cast cannot check that.
+
+### Hosting a machine inside a state
+
+`DelegatingState` owns a complete child machine and offers every event to it first. When the child handles the event its output is returned and the parent stays put (the child's `nextState` is dropped, since it names a child state). When the child declines, the state's own reactions run, which is where a subclass declares its exits. Entering the state starts or restarts the child; leaving it calls `wrapup()` on the child.
+
+```ts
+import { DelegatingState, NO_OP } from '@ue-too/being';
+
+class MoveState extends DelegatingState<
+    AppEvents,
+    BaseContext,
+    AppStates,
+    KmtInputStateMachine
+> {
+    constructor(context: KmtInputContext) {
+        super(createKmtInputStateMachine(context));
+    }
+    protected _eventReactions = {
+        switchToApp: { action: NO_OP, defaultTargetState: 'IDLE' },
+    };
+}
+```
+
+Subclasses that override `uponEnter` or `beforeExit` must call `super`. Use widening when new states need direct transitions to and from the original ones; use a `DelegatingState` when whole modes switch on and off.

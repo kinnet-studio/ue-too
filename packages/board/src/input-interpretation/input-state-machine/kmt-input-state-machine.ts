@@ -6,8 +6,11 @@ import {
     EventResult,
     Guard,
     NO_OP,
+    State,
+    StateExtender,
     TemplateState,
     TemplateStateMachine,
+    createStateExtender,
 } from '@ue-too/being';
 import type { Point } from '@ue-too/math';
 
@@ -796,4 +799,102 @@ export class KmtInputStateMachineWebWorkerProxy extends TemplateStateMachine<
         });
         return { handled: true, nextState: 'IDLE' };
     }
+}
+
+/**
+ * The callback {@link expandKmtInputStateMachine} calls with the stock states.
+ *
+ * @remarks
+ * `stock` holds every built-in KMT state already typed for the expanded machine;
+ * `extend` is {@link createStateExtender} bound to the same generics. Return the
+ * full state map for the expanded machine, typically `{ ...stock, ...changes }`.
+ *
+ * @category Input State Machine - KMT
+ */
+export type KmtInputStateMachineExpansion<
+    E extends KmtInputEventMapping,
+    C extends KmtInputContext,
+    S extends string,
+    O extends KmtInputEventOutputMapping & Partial<Record<keyof E, unknown>>,
+> = (
+    stock: Record<KmtInputStates, State<E, C, S, O>>,
+    extend: StateExtender<E, C, S, O>
+) => Record<S, State<E, C, S, O>>;
+
+/**
+ * Builds a KMT input state machine with more events, states, context or outputs
+ * than the stock one, reusing every built-in state.
+ *
+ * @param context - The expanded context; must satisfy {@link KmtInputContext}
+ * @param define - Receives the stock states and an `extend` helper, returns the
+ * expanded state map. See {@link KmtInputStateMachineExpansion}.
+ * @param initialState - Defaults to `'IDLE'`
+ * @returns A machine over the expanded generics
+ *
+ * @remarks
+ * The generics must be supersets of the stock ones: `E` extends
+ * {@link KmtInputEventMapping}, `C` extends {@link KmtInputContext}, `O` extends
+ * {@link KmtInputEventOutputMapping}, and `S` must include every
+ * {@link KmtInputStates} member (a type error otherwise). Shared events must keep
+ * the stock payload. Untouched stock states keep their stock behaviour and simply
+ * ignore events they do not know.
+ *
+ * @category Input State Machine - KMT
+ *
+ * @example
+ * ```typescript
+ * type ExpEvents = KmtInputEventMapping & { rightPointerUp: PointerEventPayload };
+ * type ExpStates = KmtInputStates | 'PLACEMENT';
+ * type ExpOut = KmtInputEventOutputMapping & { rightPointerUp: KmtOutputEvent };
+ *
+ * const machine = expandKmtInputStateMachine<ExpEvents, ExpContext, ExpStates, ExpOut>(
+ *     context,
+ *     (stock, extend) => ({
+ *         ...stock,
+ *         IDLE: extend(stock.IDLE, {
+ *             eventReactions: { rightPointerUp: { action: openMenu, defaultTargetState: 'PLACEMENT' } },
+ *         }),
+ *         PLACEMENT: new PlacementState(),
+ *     })
+ * );
+ * ```
+ */
+export function expandKmtInputStateMachine<
+    E extends KmtInputEventMapping,
+    C extends KmtInputContext,
+    S extends string,
+    O extends KmtInputEventOutputMapping & Partial<Record<keyof E, unknown>>,
+>(
+    context: C,
+    define: [KmtInputStates] extends [S]
+        ? KmtInputStateMachineExpansion<E, C, S, O>
+        : { error: 'expanded states must include every KmtInputStates member' },
+    initialState: S = 'IDLE' as S
+): TemplateStateMachine<E, C, S, O> {
+    // The generic constraints guarantee the superset relation, so retyping the
+    // stock states is exactly what createStateWidener would do.
+    const widen = (
+        state: State<
+            KmtInputEventMapping,
+            KmtInputContext,
+            KmtInputStates,
+            KmtInputEventOutputMapping
+        >
+    ) => state as unknown as State<E, C, S, O>;
+    const stock: Record<KmtInputStates, State<E, C, S, O>> = {
+        IDLE: widen(new KmtIdleState()),
+        READY_TO_PAN_VIA_SPACEBAR: widen(new ReadyToPanViaSpaceBarState()),
+        INITIAL_PAN: widen(new InitialPanState()),
+        PAN: widen(new PanState()),
+        READY_TO_PAN_VIA_SCROLL_WHEEL: widen(
+            new ReadyToPanViaScrollWheelState()
+        ),
+        PAN_VIA_SCROLL_WHEEL: widen(new PanViaScrollWheelState()),
+        DISABLED: widen(new DisabledState()),
+    };
+    const states = (define as KmtInputStateMachineExpansion<E, C, S, O>)(
+        stock,
+        createStateExtender<E, C, S, O>()
+    );
+    return new TemplateStateMachine<E, C, S, O>(states, initialState, context);
 }
