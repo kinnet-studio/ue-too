@@ -28,6 +28,8 @@ The state machine manages different input states and transitions. Below are the 
 
 ![touch-input-state-machine](https://kinnet-studio.github.io/ue-too/assets/doc-media/touch-input-state-machine.png)
 
+The diagrams above are snapshots; the [state machine visualizer example](https://kinnet-studio.github.io/ue-too/state-machine-visualizer/) charts these machines live — hold spacebar over the chart and watch the KMT input and pan-control machines transition as you pan.
+
 You can customize the state machine's behavior by defining relationships between states. The `@ue-too/being` library is used to implement the state machine. Please refer to the [being README](https://github.com/kinnet-studio/ue-too/tree/main/packages/being) for more details.
 
 ### Expanding the built-in state machines
