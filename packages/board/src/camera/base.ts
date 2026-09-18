@@ -24,6 +24,30 @@ import {
     zoomLevelWithinLimits,
 } from './utils/zoom';
 
+/**
+ * The camera mutates its limit objects in place (setMinZoomLevel,
+ * setHorizontalBoundaries, ...), so it must never hold a caller's object —
+ * least of all a shared default such as DEFAULT_BOARD_CAMERA_ZOOM_BOUNDARIES,
+ * which would leak one camera's limits into every camera created after it.
+ */
+function copyBoundaries(boundaries: Boundaries | undefined): Boundaries | undefined {
+    if (boundaries === undefined) {
+        return undefined;
+    }
+    return {
+        ...(boundaries.min !== undefined ? { min: { ...boundaries.min } } : {}),
+        ...(boundaries.max !== undefined ? { max: { ...boundaries.max } } : {}),
+    };
+}
+
+function copyZoomLevelLimits(limits: ZoomLevelLimits | undefined): ZoomLevelLimits | undefined {
+    return limits === undefined ? undefined : { ...limits };
+}
+
+function copyRotationLimits(limits: RotationLimits | undefined): RotationLimits | undefined {
+    return limits === undefined ? undefined : { ...limits };
+}
+
 export type CameraOptions = {
     viewPortWidth?: number;
     viewPortHeight?: number;
@@ -170,9 +194,9 @@ export default class BaseCamera implements BoardCamera {
         this._rotation = rotation;
         this._viewPortHeight = viewPortHeight;
         this._viewPortWidth = viewPortWidth;
-        this._zoomBoundaries = zoomLevelBoundaries;
-        this._rotationBoundaries = rotationBoundaries;
-        this._boundaries = boundaries;
+        this._zoomBoundaries = copyZoomLevelLimits(zoomLevelBoundaries);
+        this._rotationBoundaries = copyRotationLimits(rotationBoundaries);
+        this._boundaries = copyBoundaries(boundaries);
     }
 
     /**
@@ -190,7 +214,7 @@ export default class BaseCamera implements BoardCamera {
      * @param boundaries - Boundary constraints or undefined to remove all constraints
      */
     set boundaries(boundaries: Boundaries | undefined) {
-        this._boundaries = boundaries;
+        this._boundaries = copyBoundaries(boundaries);
     }
 
     /**
@@ -441,17 +465,18 @@ export default class BaseCamera implements BoardCamera {
      * If start > end, the values are automatically swapped.
      */
     set rotationBoundaries(rotationBoundaries: RotationLimits | undefined) {
+        const limits = copyRotationLimits(rotationBoundaries);
         if (
-            rotationBoundaries !== undefined &&
-            rotationBoundaries.start !== undefined &&
-            rotationBoundaries.end !== undefined &&
-            rotationBoundaries.start > rotationBoundaries.end
+            limits !== undefined &&
+            limits.start !== undefined &&
+            limits.end !== undefined &&
+            limits.start > limits.end
         ) {
-            let temp = rotationBoundaries.end;
-            rotationBoundaries.end = rotationBoundaries.start;
-            rotationBoundaries.start = temp;
+            let temp = limits.end;
+            limits.end = limits.start;
+            limits.start = temp;
         }
-        this._rotationBoundaries = rotationBoundaries;
+        this._rotationBoundaries = limits;
     }
 
     /**
