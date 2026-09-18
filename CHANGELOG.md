@@ -1,3 +1,14 @@
+## 0.18.3 (2026-09-18)
+
+### 🩹 Fixes
+
+- camera owns copies of its limit objects ([#449](https://github.com/kinnet-studio/ue-too/pull/449), [#450](https://github.com/kinnet-studio/ue-too/pull/450))
+
+### ❤️ Thank You
+
+- Claude Opus 5 (1M context)
+- vee @niuee
+
 ## 0.18.2 (2026-09-09)
 
 ### 🩹 Fixes
