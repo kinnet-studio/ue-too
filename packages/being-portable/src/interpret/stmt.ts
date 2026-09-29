@@ -1,6 +1,6 @@
 import { RuntimeErrorCode, raise } from '../errors';
 import { ScalarValue, Stmt, Value } from '../format/types';
-import { checkValue, describeType, freezeValue } from '../format/values';
+import { checkValue, copyHostValue, describeType } from '../format/values';
 import { HostEffect } from '../host';
 import { EvalEnv, evaluate } from './expr';
 
@@ -181,15 +181,16 @@ function runCall(
     if (statement.into === undefined) {
         return;
     }
-    env.meter.charge(listSize(returned), site);
+    const value = copyHostValue(returned, env.limits);
+    env.meter.charge(listSize(value), site);
     const returns = effect.returns!;
-    const check = checkValue(returned, returns, env.limits);
+    const check = checkValue(value, returns, env.limits);
     if (check !== 'ok') {
         fail(
             env,
             check === 'limit' ? 'limit-exceeded' : 'effect-return-mismatch',
-            `effect ${statement.call} returned ${Array.isArray(returned) ? 'a list' : typeof returned}, expected ${describeType(returns)}`
+            `effect ${statement.call} returned ${Array.isArray(value) ? 'a list' : typeof value}, expected ${describeType(returns)}`
         );
     }
-    env.ctx.set(statement.into, freezeValue(returned as Value));
+    env.ctx.set(statement.into, value as Value);
 }

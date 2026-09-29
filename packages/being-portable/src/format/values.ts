@@ -109,3 +109,25 @@ export function checkValue(
 export function freezeValue(value: Value): Value {
     return typeof value === 'object' ? Object.freeze([...value]) : value;
 }
+
+/**
+ * Takes a value from host code (a payload field, an effect result) once, so
+ * that checking the result checks exactly what is stored. A list is copied
+ * by index into a fresh frozen array, never through its iterator or
+ * `Symbol.species`, and at most `maxListLength + 1` items are copied: enough
+ * for the check to see an over-long list. Anything else is returned as is.
+ */
+export function copyHostValue(
+    value: unknown,
+    limits: Pick<Limits, 'maxListLength'>
+): unknown {
+    if (!Array.isArray(value)) {
+        return value;
+    }
+    const length = Math.min(value.length, limits.maxListLength + 1);
+    const copy: unknown[] = [];
+    for (let index = 0; index < length; index++) {
+        copy.push(value[index]);
+    }
+    return Object.freeze(copy);
+}

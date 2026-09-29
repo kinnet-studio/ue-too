@@ -69,6 +69,24 @@ function failure(run: () => unknown): PortableRuntimeFailure {
 
 const op = (name: string, ...args: Expr[]): Expr => ({ op: name, args });
 
+/**
+ * An array subclass holding `indexed`, whose iterator yields `yields[0]` the
+ * first time, `yields[1]` the second, and so on (the last one after that).
+ */
+function lyingList(indexed: unknown[], yields: unknown[][]): Value {
+    let call = 0;
+    class Liar extends Array<unknown> {
+        [Symbol.iterator]() {
+            return yields[Math.min(call++, yields.length - 1)][
+                Symbol.iterator
+            ]();
+        }
+    }
+    const list = new Liar();
+    indexed.forEach(item => list.push(item));
+    return list as unknown as Value;
+}
+
 describe('evaluate', () => {
     it('reads literals, context, payload and lists', () => {
         const e = env();
@@ -359,6 +377,33 @@ describe('runStatements', () => {
         ).toBe(8);
     });
 
+    it('checks the same effect result it stores, whatever the iterator says', () => {
+        const pick = (result: Value) => ({
+            pick: {
+                returns: { kind: 'list', of: 'number' } as const,
+                run: () => result,
+            },
+        });
+        const honest = stmtEnv({}, pick(lyingList([7, 8], [[7, 8], ['x']])));
+        runStatements([{ call: 'pick', into: 'items' }], honest.env, 'do');
+        expect(honest.env.ctx.get('items')).toEqual([7, 8]);
+        expect(Object.getPrototypeOf(honest.env.ctx.get('items'))).toBe(
+            Array.prototype
+        );
+
+        const lying = stmtEnv({}, pick(lyingList(['x'], [[7]])));
+        expect(
+            failure(() =>
+                runStatements(
+                    [{ call: 'pick', into: 'items' }],
+                    lying.env,
+                    'do'
+                )
+            ).code
+        ).toBe('effect-return-mismatch');
+        expect(lying.env.ctx.get('items')).toEqual([1, 2, 3]);
+    });
+
     it('enforces list and string limits on writes', () => {
         const limits: Limits = {
             ...DEFAULT_LIMITS,
@@ -434,6 +479,47 @@ describe('validatePayload', () => {
                 .ok
         ).toBe(false);
         expect(validatePayload(fields, [1], DEFAULT_LIMITS).ok).toBe(false);
+    });
+
+    it('checks the same list data it stores, whatever the iterator says', () => {
+        const honest = validatePayload(
+            fields,
+            {
+                amount: 1,
+                tags: lyingList(
+                    ['a', 'b'],
+                    [
+                        ['a', 'b'],
+                        [1, 2],
+                    ]
+                ),
+            },
+            DEFAULT_LIMITS
+        );
+        expect(honest.ok).toBe(true);
+        if (!honest.ok) return;
+        expect(honest.value.tags).toEqual(['a', 'b']);
+        expect(Object.getPrototypeOf(honest.value.tags)).toBe(Array.prototype);
+        expect(Object.isFrozen(honest.value.tags)).toBe(true);
+
+        const lying = validatePayload(
+            fields,
+            { amount: 1, tags: lyingList([1, 2], [['a', 'b']]) },
+            DEFAULT_LIMITS
+        );
+        expect(lying.ok).toBe(false);
+    });
+
+    it('rejects an over-long list without copying all of it', () => {
+        const result = validatePayload(
+            fields,
+            { amount: 1, tags: new Array(1_000_000_000) },
+            DEFAULT_LIMITS
+        );
+        expect(result).toEqual({
+            ok: false,
+            message: 'payload field "tags" is longer than the limits allow',
+        });
     });
 
     it('allows no payload for an event without fields', () => {

@@ -1,8 +1,8 @@
 import { TypeSpec, Value } from '../format/types';
 import {
     checkValue,
+    copyHostValue,
     describeType,
-    freezeValue,
     parseTypeSpec,
 } from '../format/values';
 import { Limits } from '../limits';
@@ -16,8 +16,8 @@ export type PayloadCheck =
 const EMPTY_PAYLOAD: PayloadRecord = Object.freeze(Object.create(null));
 
 /**
- * Checks a host-supplied payload against an event's declared fields and
- * copies it into a frozen, null-prototype record.
+ * Copies a host-supplied payload into a frozen, null-prototype record and
+ * checks the copy against an event's declared fields.
  */
 export function validatePayload(
     fields: Readonly<Record<string, TypeSpec>>,
@@ -52,7 +52,8 @@ export function validatePayload(
             return { ok: false, message: `missing payload field "${name}"` };
         }
         const type = parseTypeSpec(fields[name])!;
-        const check = checkValue(descriptor.value, type, limits);
+        const value = copyHostValue(descriptor.value, limits);
+        const check = checkValue(value, type, limits);
         if (check === 'type') {
             return {
                 ok: false,
@@ -65,7 +66,7 @@ export function validatePayload(
                 message: `payload field "${name}" is longer than the limits allow`,
             };
         }
-        record[name] = freezeValue(descriptor.value as Value);
+        record[name] = value as Value;
     }
     return { ok: true, value: Object.freeze(record) };
 }

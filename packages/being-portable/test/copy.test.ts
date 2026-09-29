@@ -53,6 +53,16 @@ describe('copyPlainData', () => {
         });
     });
 
+    it('rejects array subclasses', () => {
+        class Tagged extends Array<number> {}
+        const tagged = new Tagged();
+        tagged.push(1);
+        expect(errorOf({ list: tagged })).toMatchObject({
+            code: 'not-plain-data',
+            path: 'list',
+        });
+    });
+
     it('rejects accessors, holes and non-finite numbers', () => {
         const withGetter = Object.defineProperty({}, 'x', {
             get: () => 1,
