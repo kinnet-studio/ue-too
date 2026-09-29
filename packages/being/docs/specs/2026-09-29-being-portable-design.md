@@ -488,6 +488,8 @@ The host can override these defaults:
 | `maxListLength`       | 10,000  | Load and runtime: initial values, payloads, every write, effect returns, snapshots. |
 | `maxStringLength`     | 10,000  | Load and runtime: same places as lists.                                             |
 
+Checking also has a work budget: the type checker visits at most four times `maxNodes` expressions, and a named guard counts its whole expression at every place it is used. Pass-1 caps bound nesting but not reuse, so without the budget one large guard referenced thousands of times would multiply the checking work. The same budget bounds the guard work any one event can do at runtime, since an event only evaluates guards the checker already counted.
+
 ### Prototype safety
 
 Names are restricted as above. Context lives in a null-prototype store. The

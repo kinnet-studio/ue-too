@@ -20,9 +20,20 @@ import {
     sameType,
     scalarType,
 } from '../format/values';
+import { Limits } from '../limits';
 import { entriesOf, hasOwn, joinPath } from '../util';
 import { OPERATORS } from './operators';
 import { listBodies } from './references';
+
+/**
+ * Checking may visit at most `CHECK_WORK_FACTOR × maxNodes` expressions.
+ * A named guard counts its whole expression at every place it is used, so
+ * this also bounds the guard work any one event can do at runtime.
+ */
+const CHECK_WORK_FACTOR = 4;
+
+/** Sentinel exception to stop expression walking when the work budget is exceeded. */
+class CheckBudgetExceeded {}
 
 type OutputRule =
     | { readonly kind: 'forbidden' }
@@ -57,10 +68,14 @@ const isBoolean = (type: ValueType) =>
  * Passes 3 and 4 in one walk: every expression and statement type-checks,
  * and every construct is used where it is allowed. Parts with broken
  * references are skipped; pass 2 already reported them. A named guard is
- * checked where it is used; an unused one is not type-checked.
+ * checked where it is used; an unused one is not type-checked. Checking is
+ * bounded by a work budget to prevent pathological reuse of large guards.
  */
-export function checkTypes(definition: MachineDefinition): LoadError[] {
-    const checker = new TypeChecker(definition);
+export function checkTypes(
+    definition: MachineDefinition,
+    limits: Limits
+): LoadError[] {
+    const checker = new TypeChecker(definition, limits);
     checker.run();
     return checker.errors;
 }
@@ -69,20 +84,32 @@ class TypeChecker {
     readonly errors: LoadError[] = [];
     private readonly effects: Readonly<Record<string, EffectDeclaration>>;
     private readonly machines: Readonly<Record<string, MachineBody>>;
+    private visits = 0;
+    private readonly budget: number;
 
-    constructor(private readonly definition: MachineDefinition) {
+    constructor(
+        private readonly definition: MachineDefinition,
+        limits: Limits
+    ) {
         this.effects = definition.effects ?? {};
         this.machines = definition.machines ?? {};
+        this.budget = limits.maxNodes * CHECK_WORK_FACTOR;
     }
 
     run(): void {
-        for (const { path, body } of listBodies(this.definition)) {
-            for (const [stateName, state] of entriesOf(body.states)) {
-                this.state(
-                    body,
-                    state,
-                    joinPath(joinPath(path, 'states'), stateName)
-                );
+        try {
+            for (const { path, body } of listBodies(this.definition)) {
+                for (const [stateName, state] of entriesOf(body.states)) {
+                    this.state(
+                        body,
+                        state,
+                        joinPath(joinPath(path, 'states'), stateName)
+                    );
+                }
+            }
+        } catch (error) {
+            if (!(error instanceof CheckBudgetExceeded)) {
+                throw error;
             }
         }
     }
@@ -422,6 +449,15 @@ class TypeChecker {
     }
 
     private expr(expr: Expr, path: string, env: Env): ValueType | null {
+        this.visits += 1;
+        if (this.visits > this.budget) {
+            this.fail(
+                'limit-exceeded',
+                path,
+                `checking this document visits more than ${this.budget} expressions; a named guard counts its whole expression every place it is used`
+            );
+            throw new CheckBudgetExceeded();
+        }
         if (typeof expr === 'number') {
             return NUMBER;
         }

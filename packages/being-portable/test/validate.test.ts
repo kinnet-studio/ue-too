@@ -354,4 +354,19 @@ describe('types and placement', () => {
             },
         ]);
     });
+
+    it('caps the work of re-checking named guards at each use', () => {
+        const doc = vendingDoc();
+        doc.states.HAS_MONEY.guards.big = {
+            op: 'and',
+            args: Array.from({ length: 200 }, () => true),
+        };
+        doc.states.HAS_MONEY.on.select.require = Array.from(
+            { length: 1000 },
+            () => 'big'
+        );
+        expect(errorsOf(doc).map(error => error.code)).toEqual([
+            'limit-exceeded',
+        ]);
+    });
 });

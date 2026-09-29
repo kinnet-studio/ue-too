@@ -42,7 +42,7 @@ export function checkDefinition(
     const definition = migrated.value as unknown as MachineDefinition;
     const errors = dedupe([
         ...checkReferences(definition, limits),
-        ...checkTypes(definition),
+        ...checkTypes(definition, limits),
     ]);
     return errors.length > 0 ? { ok: false, errors } : { ok: true, definition };
 }
