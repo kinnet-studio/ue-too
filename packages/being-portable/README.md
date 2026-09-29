@@ -32,7 +32,7 @@ const host = defineHost({
 
 const result = loadMachine(JSON.parse(sharedFileText), host);
 if (!result.ok) {
-    showErrors(result.errors); // every problem, each with a JSON path
+    showErrors(result.errors); // every problem (up to 1,000), with JSON paths
 } else {
     result.machine.happens('insertCoin', { amount: 1 });
     save(JSON.stringify(result.machine.snapshot()));
@@ -130,9 +130,18 @@ The full format is in the
 - No loops or recursion, so every event finishes. Limits cap document size,
   nesting, list and string lengths, and machine instances; override them with
   `defineHost({ limits })`.
+- Each `happens()`, `start()`, `reset()` and `wrapup()` is also capped by
+  `maxEventWork` (1,000,000 work units by default: one per expression and
+  statement, plus the length of any list or string it copies or scans).
+  Checking a document has a work budget too, in which a named guard counts at
+  every place it is used.
 - Each `happens()`, `start()`, `reset()` and `wrapup()` is atomic: if anything
   fails, the whole machine tree rolls back and `onError` gets the error.
   Effects that already ran are listed but not undone.
+- `onEventResult` and `onStateChange` subscribers are notified while the event
+  is still running, so they can see a result or a state change for an event
+  that then fails and rolls back. What `happens()` returns and what `onError`
+  receives are final.
 - An effect or subscriber that calls back into the machine gets a
   `reentrant-call` error; defer such calls with `queueMicrotask`.
 
@@ -158,10 +167,12 @@ Inline guards show up under their printed expression, such as
 
 ## Performance
 
-In the package benchmark a flat machine handles an event in well under a
-microsecond and a nested one in under two, so thousands of events fit in one
-60 FPS frame. Run `bun packages/being-portable/bench/happens.ts` to measure
-on your machine.
+In the package benchmark, typical machines handle an event in about a
+microsecond (a flat one in under one, a nested one in under two), so
+thousands of events fit in one 60 FPS frame. Run
+`bun packages/being-portable/bench/happens.ts` to measure on your machine.
+That measures ordinary documents; a hostile document is held in check by the
+limits, not by speed, and `maxEventWork` caps what any one event can cost.
 
 ## API Reference
 
