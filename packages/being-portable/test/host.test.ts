@@ -40,6 +40,11 @@ describe('defineHost', () => {
         ).toThrow('defineHost');
         expect(() =>
             defineHost({
+                effects: { ['e'.repeat(129)]: { args: {}, run: noop } },
+            })
+        ).toThrow('at most 128 characters');
+        expect(() =>
+            defineHost({
                 effects: { e: { args: { x: 'float' as any }, run: noop } },
             })
         ).toThrow('argument x of effect e');

@@ -3,6 +3,9 @@ import { LoadError, loadError } from '../errors';
 /** Every author-chosen name must match this. */
 export const NAME_PATTERN = /^[A-Za-z_][A-Za-z0-9_]*$/;
 
+/** Longest name allowed, so names cannot inflate error paths and messages. */
+export const MAX_NAME_LENGTH = 128;
+
 const RESERVED_NAMES = new Set(['__proto__', 'constructor', 'prototype']);
 const RESERVED_STATE_NAMES = new Set(['INITIAL', 'TERMINAL']);
 
@@ -27,6 +30,13 @@ export function checkName(
             'invalid-structure',
             path,
             `${kind} name must be a string`
+        );
+    }
+    if (value.length > MAX_NAME_LENGTH) {
+        return loadError(
+            'invalid-name',
+            path,
+            `this ${kind} name has ${value.length} characters; names are at most ${MAX_NAME_LENGTH} characters`
         );
     }
     if (!NAME_PATTERN.test(value)) {

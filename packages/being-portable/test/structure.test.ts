@@ -54,6 +54,18 @@ describe('checkStructure', () => {
         ]);
     });
 
+    it('caps names at 128 characters', () => {
+        const fits = 'S'.repeat(128);
+        const tooLong = 'S'.repeat(129);
+        const doc = vendingDoc();
+        doc.states[fits] = {};
+        expect(structureErrors(doc)).toEqual([]);
+        doc.states[tooLong] = {};
+        expect(structureErrors(doc)).toEqual([
+            { code: 'invalid-name', path: `states.${tooLong}` },
+        ]);
+    });
+
     it('checks context fields and their initial values', () => {
         const doc = vendingDoc();
         doc.context.balance.initial = 'zero';
