@@ -5,10 +5,13 @@ import {
     PortableEvents,
     PortableMachine,
     PortableOutputs,
+    RestoreMode,
+    RestoreResult,
 } from '../api-types';
-import { MachineDefinition } from '../format/types';
+import { MachineDefinition, MachineSnapshot } from '../format/types';
 import { validatePayload } from '../interpret/payload';
 import { TxMachine } from '../interpret/tx';
+import { captureSnapshot, restoreSnapshot } from '../snapshot';
 import { hasOwn, joinPath } from '../util';
 import { MachineRuntime } from './runtime';
 
@@ -161,6 +164,17 @@ export class PortableStateMachine
                 callback(args, result, context)
             )
         );
+    }
+
+    snapshot(): MachineSnapshot {
+        return captureSnapshot(this);
+    }
+
+    restore(
+        snapshot: unknown,
+        options: { readonly mode?: RestoreMode } = {}
+    ): RestoreResult {
+        return restoreSnapshot(this, snapshot, options.mode ?? 'strict');
     }
 
     isInFinalState(): boolean {

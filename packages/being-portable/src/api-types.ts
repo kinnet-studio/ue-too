@@ -1,7 +1,7 @@
 import { BaseContext, StateMachine } from '@ue-too/being';
 
 import { LoadError } from './errors';
-import { MachineDefinition, Value } from './format/types';
+import { MachineDefinition, MachineSnapshot, Value } from './format/types';
 
 /**
  * Event mapping of a portable machine. Events are only known at runtime, so
@@ -31,7 +31,32 @@ export interface PortableContext extends BaseContext {
 }
 
 /**
- * A loaded machine: an ordinary `being` state machine plus its definition.
+ * How {@link PortableMachine.restore} treats a snapshot from another revision.
+ *
+ * @category Types
+ */
+export type RestoreMode = 'strict' | 'structural';
+
+/**
+ * What a structural restore changed. Paths are JSON paths into the snapshot.
+ *
+ * @category Types
+ */
+export type RestoreReport = {
+    readonly dropped: readonly string[];
+    readonly defaulted: readonly string[];
+};
+
+/**
+ * @category Types
+ */
+export type RestoreResult =
+    | { readonly ok: true; readonly report: RestoreReport }
+    | { readonly ok: false; readonly errors: readonly LoadError[] };
+
+/**
+ * A loaded machine: an ordinary `being` state machine plus its definition,
+ * snapshot and restore.
  *
  * @category Types
  */
@@ -44,6 +69,12 @@ export interface PortableMachine extends StateMachine<
     /** The upgraded, normalized document, frozen. */
     readonly definition: MachineDefinition;
     readonly context: PortableContext;
+    /** Throws while the machine is handling an event. */
+    snapshot(): MachineSnapshot;
+    restore(
+        snapshot: unknown,
+        options?: { readonly mode?: RestoreMode }
+    ): RestoreResult;
 }
 
 /**
@@ -57,7 +88,11 @@ export type ValidationResult =
  * @category Types
  */
 export type LoadOptions = {
-    /** Defaults to `true`. */
+    /** Restore this snapshot instead of starting. */
+    readonly snapshot?: unknown;
+    /** Defaults to `'strict'`. */
+    readonly restoreMode?: RestoreMode;
+    /** Defaults to `true`. Ignored when `snapshot` is given. */
     readonly autoStart?: boolean;
 };
 
@@ -65,5 +100,10 @@ export type LoadOptions = {
  * @category Types
  */
 export type LoadResult =
-    | { readonly ok: true; readonly machine: PortableMachine }
+    | {
+          readonly ok: true;
+          readonly machine: PortableMachine;
+          /** Present when a snapshot was restored. */
+          readonly restoreReport?: RestoreReport;
+      }
     | { readonly ok: false; readonly errors: readonly LoadError[] };

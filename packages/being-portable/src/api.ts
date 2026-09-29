@@ -57,6 +57,14 @@ export function loadMachine(
         return validated;
     }
     const machine = buildMachineTree(validated.definition, host);
+    if (options.snapshot !== undefined) {
+        const restored = machine.restore(options.snapshot, {
+            mode: options.restoreMode ?? 'strict',
+        });
+        return restored.ok
+            ? { ok: true, machine, restoreReport: restored.report }
+            : { ok: false, errors: restored.errors };
+    }
     if (options.autoStart ?? true) {
         machine.start();
     }
