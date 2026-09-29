@@ -87,7 +87,7 @@ export class PortableStateMachine
             this.runtime.host.limits
         );
         if (!checked.ok) {
-            this.runtime.host.onError({
+            transaction.reportError({
                 code: 'payload-mismatch',
                 message: checked.message,
                 path: joinPath(joinPath(this.runtime.path, 'events'), event),

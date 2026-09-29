@@ -5,6 +5,9 @@ import { PayloadRecord, WorkMeter } from './expr';
 import { EffectCaller } from './stmt';
 import { ContextStore, StoreTransaction } from './store';
 
+/** Errors queued while `onError` runs, per delivery; the rest are dropped. */
+export const MAX_QUEUED_REPORTS = 100;
+
 /** What guards and actions can read about the event being handled. */
 export type EventFrame = {
     readonly payload: PayloadRecord | null;
@@ -40,6 +43,9 @@ export class Transaction implements StoreTransaction, EffectCaller, WorkMeter {
     private hostDepth = 0;
     private delegationDepth = 0;
     private reporting = false;
+    private readonly queued: RuntimeError[] = [];
+    private accepted = 0;
+    private dropped = 0;
     private event: string | null = null;
     private effectsCalled: string[] = [];
     private readonly frames: EventFrame[] = [];
@@ -128,15 +134,53 @@ export class Transaction implements StoreTransaction, EffectCaller, WorkMeter {
         });
     }
 
+    /** Reports a failure found outside a run, such as a bad payload. */
+    reportError(error: RuntimeError): void {
+        this.report(error);
+    }
+
+    /**
+     * Delivers `error` to `onError`. An error raised while `onError` runs
+     * (for example by an event it starts) is queued and delivered after it
+     * returns, in order. At most {@link MAX_QUEUED_REPORTS} are queued per
+     * delivery, so an `onError` that keeps causing errors cannot loop
+     * forever; if more were raised, one `limit-exceeded` error says how
+     * many were dropped.
+     */
     private report(error: RuntimeError): void {
         if (this.reporting) {
+            if (this.accepted < MAX_QUEUED_REPORTS) {
+                this.accepted += 1;
+                this.queued.push(error);
+            } else {
+                this.dropped += 1;
+            }
             return;
         }
         this.reporting = true;
         try {
             this.onError(error);
+            for (
+                let next = this.queued.shift();
+                next !== undefined;
+                next = this.queued.shift()
+            ) {
+                this.onError(next);
+            }
+            if (this.dropped > 0) {
+                this.onError({
+                    code: 'limit-exceeded',
+                    message: `onError caused more than ${MAX_QUEUED_REPORTS} further errors; ${this.dropped} were dropped`,
+                    path: '',
+                    event: null,
+                    effectsCalled: [],
+                });
+            }
         } finally {
             this.reporting = false;
+            this.queued.length = 0;
+            this.accepted = 0;
+            this.dropped = 0;
         }
     }
 

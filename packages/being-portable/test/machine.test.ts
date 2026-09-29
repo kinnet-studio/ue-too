@@ -4,7 +4,9 @@ import { describe, expect, it } from 'vitest';
 import { loadMachine } from '../src/api';
 import { PortableMachine } from '../src/api-types';
 import { uniqueName } from '../src/compile/names';
+import { RuntimeError } from '../src/errors';
 import { Host } from '../src/host';
+import { MAX_QUEUED_REPORTS } from '../src/interpret/tx';
 import { Doc, vendingDoc } from './fixtures';
 import { recordingHost } from './recording-host';
 
@@ -336,6 +338,56 @@ describe('re-entry', () => {
         expect(machine.currentState).toBe('HAS_MONEY');
         expect(errors.map(error => error.code)).toEqual(['reentrant-call']);
         expect(thrown).toMatch(/^reentrant-call/);
+    });
+
+    it('shows onError the failure of an event it starts', () => {
+        let machine: PortableMachine | null = null;
+        const seen: string[] = [];
+        const { host } = recordingHost(
+            {
+                onError: error => {
+                    seen.push(`${error.code} ${error.event}`);
+                    if (seen.length === 1) {
+                        machine!.happens('cancel');
+                        seen.push('retried');
+                    }
+                },
+            },
+            {
+                refund: () => {
+                    throw new Error('jammed');
+                },
+            }
+        );
+        machine = load(vendingDoc(), host);
+        machine.happens('insertCoin', { amount: 3 });
+        machine.happens('cancel');
+        expect(seen).toEqual([
+            'effect-failed cancel',
+            'retried',
+            'effect-failed cancel',
+        ]);
+    });
+
+    it('bounds an onError that keeps retrying a bad payload', () => {
+        let machine: PortableMachine | null = null;
+        const seen: RuntimeError[] = [];
+        const bad = { amount: 'bad' as unknown as number };
+        const { host } = recordingHost({
+            onError: error => {
+                seen.push(error);
+                machine!.happens('insertCoin', bad);
+            },
+        });
+        machine = load(vendingDoc(), host);
+        machine.happens('insertCoin', bad);
+        expect(seen).toHaveLength(MAX_QUEUED_REPORTS + 2);
+        expect(seen[0]).toMatchObject({
+            code: 'payload-mismatch',
+            path: 'events.insertCoin',
+        });
+        expect(seen[MAX_QUEUED_REPORTS + 1].code).toBe('limit-exceeded');
+        expect(machine.context.get('balance')).toBe(0);
     });
 
     it('lets onError start a new event after a failure', () => {

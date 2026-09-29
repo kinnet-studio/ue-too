@@ -2,7 +2,11 @@ import { describe, expect, it } from 'vitest';
 
 import { PortableRuntimeFailure, RuntimeError } from '../src/errors';
 import { ContextStore } from '../src/interpret/store';
-import { Transaction, TxMachine } from '../src/interpret/tx';
+import {
+    MAX_QUEUED_REPORTS,
+    Transaction,
+    TxMachine,
+} from '../src/interpret/tx';
 import { DEFAULT_LIMITS } from '../src/limits';
 
 function setup() {
@@ -104,14 +108,45 @@ describe('Transaction', () => {
         });
     });
 
-    it('does not recurse when onError calls back during a re-entrant report', () => {
+    it('delivers errors raised during onError after it returns', () => {
+        const reports: string[] = [];
+        const tx: Transaction = new Transaction(error => {
+            reports.push(error.event!);
+            if (error.event === 'first') {
+                tx.reportError({ ...error, event: 'second' });
+                tx.reportError({ ...error, event: 'third' });
+                reports.push('first done');
+            }
+        }, DEFAULT_LIMITS.maxEventWork);
+        tx.run('first', failWith);
+        expect(reports).toEqual(['first', 'first done', 'second', 'third']);
+    });
+
+    it('bounds the errors an onError that keeps calling back can cause', () => {
         const reports: RuntimeError[] = [];
         const tx: Transaction = new Transaction(error => {
             reports.push(error);
             tx.reportReentrant('again', 'happens()');
         }, DEFAULT_LIMITS.maxEventWork);
         tx.run('go', () => tx.reportReentrant('x', 'happens()'));
-        expect(reports.map(report => report.code)).toEqual(['reentrant-call']);
+        expect(reports).toHaveLength(MAX_QUEUED_REPORTS + 2);
+        expect(
+            reports
+                .slice(0, MAX_QUEUED_REPORTS + 1)
+                .every(report => report.code === 'reentrant-call')
+        ).toBe(true);
+        expect(reports[MAX_QUEUED_REPORTS + 1]).toMatchObject({
+            code: 'limit-exceeded',
+            path: '',
+            event: null,
+        });
+        expect(reports[MAX_QUEUED_REPORTS + 1].message).toContain('dropped');
+        // The bound is per delivery: a later failure is delivered, and
+        // bounded, the same way.
+        const before = reports.length;
+        tx.run('later', failWith);
+        expect(reports[before].event).toBe('later');
+        expect(reports.length - before).toBe(MAX_QUEUED_REPORTS + 2);
     });
 
     it('meters work inside a transaction only, per run', () => {
