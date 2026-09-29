@@ -33,6 +33,8 @@ export type PortableStateInstance = State<
  * A compiled machine. Every public entry point runs inside the tree's
  * transaction: a new one from host code, the running one when a parent
  * delegates to this child, and never from inside an effect or subscriber.
+ * Host code drives only the root; a child runs only when its parent
+ * delegates to it.
  */
 export class PortableStateMachine
     extends TemplateStateMachine<
@@ -74,6 +76,7 @@ export class PortableStateMachine
             );
             return { handled: false };
         }
+        this.refuseUnlessRoot();
         const events = this.runtime.body.events;
         if (typeof event !== 'string' || !hasOwn(events, event)) {
             return { handled: false };
@@ -100,14 +103,16 @@ export class PortableStateMachine
     }
 
     start(): void {
-        this.lifecycle('start()', () => super.start());
+        this.lifecycle('start()', () =>
+            this.runtime.context.allowSetup(() => super.start())
+        );
     }
 
     reset(): void {
         this.lifecycle('reset()', () => {
             super.wrapup();
             this.switchTo('INITIAL');
-            super.start();
+            this.runtime.context.allowSetup(() => super.start());
         });
     }
 
@@ -127,7 +132,17 @@ export class PortableStateMachine
                 `reentrant-call: ${call} was called while the machine was busy; defer it, for example with queueMicrotask`
             );
         }
+        this.refuseUnlessRoot();
         transaction.run(null, body);
+    }
+
+    /** A child machine only runs when its parent delegates to it. */
+    private refuseUnlessRoot(): void {
+        if (!this.runtime.isRoot) {
+            throw new Error(
+                'child machines are driven by their parent machine'
+            );
+        }
     }
 
     switchTo(state: string): void {

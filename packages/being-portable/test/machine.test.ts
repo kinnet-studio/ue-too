@@ -112,6 +112,32 @@ describe('a flat machine', () => {
         expect(() => machine.setContext(machine.context)).toThrow('setContext');
     });
 
+    it('does not let the host run context setup', () => {
+        const machine = load(vendingDoc(), recordingHost().host);
+        machine.happens('insertCoin', { amount: 3 });
+        expect(() => machine.context.setup()).toThrow(
+            'setup() is run by the machine itself; the host cannot reset its context'
+        );
+        expect(machine.context.get('balance')).toBe(3);
+        machine.reset();
+        expect(machine.context.get('balance')).toBe(0);
+    });
+
+    it('does not let an effect run context setup during start', () => {
+        let machine: PortableMachine | null = null;
+        const doc = vendingDoc();
+        doc.states.IDLE.enter = [{ call: 'refund', args: { amount: 0 } }];
+        const { host, errors } = recordingHost(
+            {},
+            { refund: () => machine!.context.setup() }
+        );
+        machine = load(doc, host, false);
+        machine.start();
+        expect(machine.currentState).toBe('INITIAL');
+        expect(errors[0].code).toBe('effect-failed');
+        expect(errors[0].message).toContain('setup() is run by the machine');
+    });
+
     it('resets to the initial values', () => {
         const machine = load(vendingDoc(), recordingHost().host);
         machine.happens('insertCoin', { amount: 3 });

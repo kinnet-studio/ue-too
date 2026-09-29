@@ -131,6 +131,21 @@ describe('nested machines', () => {
         });
     });
 
+    it('refuses calls on a child that do not come from its parent', () => {
+        const machine = load(gameDoc(), recordingHost());
+        machine.happens('begin');
+        const turn = child(machine);
+        const message = 'child machines are driven by their parent machine';
+        expect(() => turn.happens('roll', { value: 3 })).toThrow(message);
+        expect(() => turn.start()).toThrow(message);
+        expect(() => turn.reset()).toThrow(message);
+        expect(() => turn.wrapup()).toThrow(message);
+        expect(turn.currentState).toBe('ROLLING');
+        expect(turn.context.get('points')).toBe(0);
+        expect(machine.happens('roll', { value: 3 }).handled).toBe(true);
+        expect(machine.context.get('score')).toBe(6);
+    });
+
     it('shows onDone as a $done edge that events cannot trigger', () => {
         const machine = load(gameDoc(), recordingHost());
         expect(extractMachineGraph(machine).edges).toContainEqual({

@@ -5,6 +5,7 @@ import { ContextStore } from '../interpret/store';
 /** The `context` of a portable machine: a read-only view over its store. */
 export class PortableContextImpl implements PortableContext {
     private pendingWith: ReadonlyMap<string, Value> | null = null;
+    private setupAllowed = false;
 
     constructor(readonly store: ContextStore) {}
 
@@ -19,8 +20,28 @@ export class PortableContextImpl implements PortableContext {
         return Object.freeze(this.store.toRecord());
     }
 
+    /**
+     * Runs the machine's own `start()` with one `setup()` call allowed. Any
+     * other `setup()` call, from the host or from an effect while the start
+     * runs, throws.
+     */
+    allowSetup<T>(body: () => T): T {
+        this.setupAllowed = true;
+        try {
+            return body();
+        } finally {
+            this.setupAllowed = false;
+        }
+    }
+
     /** Called by `start()`: back to initial values, then any pending `with`. */
     setup(): void {
+        if (!this.setupAllowed) {
+            throw new Error(
+                'setup() is run by the machine itself; the host cannot reset its context'
+            );
+        }
+        this.setupAllowed = false;
         this.store.resetToInitial();
         const pending = this.pendingWith;
         this.pendingWith = null;
