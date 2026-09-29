@@ -1,0 +1,64 @@
+{
+    "$schema": "../../node_modules/nx/schemas/project-schema.json",
+    "name": "being-portable",
+    "projectType": "library",
+    "sourceRoot": "packages/being-portable/src",
+    "tags": [],
+    "targets": {
+        "build": {
+            "dependsOn": [
+                {
+                    "projects": ["being"],
+                    "target": "build"
+                }
+            ],
+            "executor": "nx:run-commands",
+            "options": {
+                "command": "rm -rf dist && bun run ../../scripts/build.ts --external @ue-too/being",
+                "cwd": "packages/being-portable"
+            }
+        },
+        "build:bun": {
+            "dependsOn": [
+                {
+                    "projects": ["being"],
+                    "target": "build"
+                }
+            ],
+            "executor": "nx:run-commands",
+            "options": {
+                "command": "rm -rf dist && bun run ../../scripts/build.ts --external @ue-too/being",
+                "cwd": "packages/being-portable"
+            }
+        },
+        "docs:build": {
+            "executor": "nx:run-commands",
+            "options": {
+                "command": "bun run ../../scripts/docs-build-i18n.ts",
+                "cwd": "packages/being-portable"
+            }
+        },
+        "move-package": {
+            "executor": "nx:run-commands",
+            "options": {
+                "command": "node ../../scripts/move-package.mjs",
+                "cwd": "packages/being-portable"
+            }
+        },
+        "nx-release-publish": {
+            "executor": "nx:run-commands",
+            "options": {
+                "command": "node ../../../scripts/publish-package.mjs",
+                "cwd": "packages/being-portable/dist",
+                "forwardAllArgs": false
+            }
+        },
+        "test": {
+            "executor": "nx:run-commands",
+            "options": {
+                "command": "bun test",
+                "cwd": "packages/being-portable"
+            }
+        }
+    }
+}

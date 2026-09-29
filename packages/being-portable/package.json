@@ -1,0 +1,34 @@
+{
+    "dependencies": {
+        "@ue-too/being": "workspace:*"
+    },
+    "exports": {
+        ".": {
+            "default": "./src/index.ts",
+            "import": "./src/index.ts",
+            "types": "./src/index.ts"
+        },
+        "./*": {
+            "default": "./src/*/index.ts",
+            "import": "./src/*/index.ts",
+            "types": "./src/*/index.ts"
+        },
+        "./package.json": "./package.json"
+    },
+    "homepage": "https://github.com/kinnet-studio/ue-too",
+    "license": "MIT",
+    "main": "./src/index.ts",
+    "module": "./src/index.ts",
+    "name": "@ue-too/being-portable",
+    "repository": {
+        "type": "git",
+        "url": "https://github.com/kinnet-studio/ue-too.git"
+    },
+    "scripts": {
+        "build:legacy": "rm -rf dist && rollup -c rollup.config.js",
+        "test": "jest"
+    },
+    "type": "module",
+    "types": "./src/index.ts",
+    "version": "0.18.0"
+}

@@ -1,0 +1,11 @@
+{
+    "$schema": "https://typedoc.org/schema.json",
+    "categoryOrder": ["Core", "Helpers", "Types", "*"],
+    "entryPoints": ["src/index.ts"],
+    "extends": "../../typedoc.json",
+    "includeVersion": true,
+    "name": "@ue-too/being-portable",
+    "out": "../../docs/being-portable",
+    "readme": "./README.md",
+    "sort": ["static-first", "alphabetical"]
+}

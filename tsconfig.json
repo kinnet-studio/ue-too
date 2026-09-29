@@ -60,6 +60,9 @@
         },
         {
             "path": "./packages/being-devtools"
+        },
+        {
+            "path": "./packages/being-portable"
         }
     ]
 }

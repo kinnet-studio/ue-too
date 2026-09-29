@@ -1,0 +1,22 @@
+{
+    "compilerOptions": {
+        "baseUrl": ".",
+        "composite": true,
+        "declaration": true,
+        "lib": ["ES2020", "DOM"],
+        "module": "ESNext",
+        "moduleResolution": "bundler",
+        "outDir": "dist",
+        "rootDir": "src",
+        "strict": true,
+        "tsBuildInfoFile": "dist/being-portable.tsbuildinfo",
+        "types": []
+    },
+    "extends": "../../tsconfig.base.json",
+    "include": ["src/**/*"],
+    "references": [
+        {
+            "path": "../being"
+        }
+    ]
+}
