@@ -235,6 +235,55 @@ describe('references', () => {
         });
     });
 
+    it('caps the total size the tree compiles, counting every instance', () => {
+        const shared = (states: number): Doc => {
+            const hosts: Doc = {};
+            for (let i = 0; i < states; i++) {
+                hosts[`S${i}`] = { child: { machine: 'kid' } };
+            }
+            return {
+                format: 'being-machine@1',
+                id: 'wide',
+                revision: 1,
+                context: {},
+                events: {},
+                machines: {
+                    kid: {
+                        context: {
+                            data: {
+                                type: 'list',
+                                of: 'number',
+                                initial: Array.from(
+                                    { length: 200 },
+                                    (_, index) => index
+                                ),
+                            },
+                        },
+                        events: {},
+                        initialState: 'A',
+                        states: { A: {} },
+                    },
+                },
+                initialState: 'S0',
+                states: hosts,
+            };
+        };
+        // About 210 nodes per kid instance: 15 fit in 4 × 1000, 20 do not,
+        // though the document itself stays far under 1000 nodes and 21
+        // instances are far under maxMachineInstances.
+        expect(errorsOf(shared(15), { maxNodes: 1000 })).toEqual([]);
+        const result = check(shared(20), { maxNodes: 1000 });
+        expect(result.ok).toBe(false);
+        if (result.ok) return;
+        expect(result.errors).toEqual([
+            {
+                code: 'limit-exceeded',
+                path: 'machines',
+                message: 'the machine tree would compile more than 4000 nodes',
+            },
+        ]);
+    });
+
     it('enforces nesting depth and instance count', () => {
         const chain = gameDoc();
         chain.machines.inner = {

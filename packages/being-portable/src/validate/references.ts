@@ -326,7 +326,46 @@ function checkCycles(definition: MachineDefinition, fail: Fail): boolean {
     return found;
 }
 
-/** Nesting depth and instance count from the root. Assumes no cycles. */
+/** Every machine instance compiles these parts of its body. */
+const BODY_KEYS = ['context', 'events', 'outputs', 'initialState', 'states'];
+
+/** Compiled parts may total at most this many times `maxNodes`. */
+const COMPILE_SIZE_FACTOR = 4;
+
+/** JSON values in copied plain data; the copy step already capped its depth. */
+function countNodes(value: unknown): number {
+    if (typeof value !== 'object' || value === null) {
+        return 1;
+    }
+    let count = 1;
+    if (Array.isArray(value)) {
+        for (const item of value) {
+            count += countNodes(item);
+        }
+    } else {
+        const record = value as Readonly<Record<string, unknown>>;
+        for (const key of Object.keys(record)) {
+            count += countNodes(record[key]);
+        }
+    }
+    return count;
+}
+
+/** JSON values in the parts of a body that one instance compiles. */
+function bodyNodes(body: MachineBody): number {
+    const record = body as unknown as Readonly<Record<string, unknown>>;
+    return BODY_KEYS.reduce(
+        (total, key) =>
+            hasOwn(record, key) ? total + countNodes(record[key]) : total,
+        1
+    );
+}
+
+/**
+ * Nesting depth, instance count and compiled size from the root. Every
+ * instance compiles its whole body, so the size counts each instance.
+ * Assumes no cycles.
+ */
 function checkTreeSize(
     definition: MachineDefinition,
     limits: Limits,
@@ -335,7 +374,9 @@ function checkTreeSize(
     const machines = definition.machines ?? {};
     const depths = new Map<string, number>();
     const counts = new Map<string, number>();
+    const sizes = new Map<string, number>();
     const cap = limits.maxMachineInstances + 1;
+    const maxSize = COMPILE_SIZE_FACTOR * limits.maxNodes;
 
     const depthOf = (body: MachineBody): number =>
         childKeys(body, machines).reduce(
@@ -348,6 +389,14 @@ function checkTreeSize(
             childKeys(body, machines).reduce(
                 (total, key) => total + memo(counts, key, countOf),
                 1
+            )
+        );
+    const sizeOf = (body: MachineBody): number =>
+        Math.min(
+            maxSize + 1,
+            childKeys(body, machines).reduce(
+                (total, key) => total + memo(sizes, key, sizeOf),
+                bodyNodes(body)
             )
         );
     const memo = (
@@ -376,6 +425,13 @@ function checkTreeSize(
             'limit-exceeded',
             'machines',
             `the machine tree would build more than ${limits.maxMachineInstances} machines`
+        );
+    }
+    if (sizeOf(definition) > maxSize) {
+        fail(
+            'limit-exceeded',
+            'machines',
+            `the machine tree would compile more than ${maxSize} nodes`
         );
     }
 }
