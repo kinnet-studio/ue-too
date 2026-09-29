@@ -109,10 +109,10 @@ and `machines`.
 
 Every name the author chooses (machine id, machine keys, state names, event
 names, context fields, payload fields, effect names, effect argument names,
-guard names) must match `^[A-Za-z_][A-Za-z0-9_]*$`. The names `__proto__`,
-`constructor` and `prototype` are rejected everywhere. `INITIAL` and
-`TERMINAL` are rejected as state names because `being` uses them for its
-pseudo-states.
+guard names) must match `^[A-Za-z_][A-Za-z0-9_]*$` and are at most 128
+characters long. The names `__proto__`, `constructor` and `prototype` are
+rejected everywhere. `INITIAL` and `TERMINAL` are rejected as state names
+because `being` uses them for its pseudo-states.
 
 ### Types
 
@@ -148,6 +148,7 @@ string and `{ "type": scalar }` mean the same thing.
 - Every context field has a type and an `initial` value of that type.
 - Every payload field is required, and a payload may not carry undeclared
   fields.
+- Every key in `outputs` is a declared event (`unknown-event` otherwise).
 - `effects` declares the host capabilities the document calls, with exact
   argument and return types. The host must supply each one with a matching
   signature.
@@ -321,25 +322,25 @@ Every expression has a static type, checked at load.
 
 Operators:
 
-| Operator                     | Arguments                 | Result    | Notes                                                                                |
-| ---------------------------- | ------------------------- | --------- | ------------------------------------------------------------------------------------ |
-| `+` `*`                      | 2 or more `number`        | `number`  |                                                                                      |
-| `-` `/` `%`                  | 2 `number`                | `number`  |                                                                                      |
-| `min` `max`                  | 2 or more `number`        | `number`  |                                                                                      |
-| `abs` `floor` `ceil` `round` | 1 `number`                | `number`  | `round` is `Math.round`.                                                             |
-| `==` `!=`                    | 2 of the same scalar type | `boolean` | Strict equality. Lists cannot be compared.                                           |
-| `<` `<=` `>` `>=`            | 2 `number`                | `boolean` |                                                                                      |
-| `and` `or`                   | 2 or more `boolean`       | `boolean` | Short-circuit.                                                                       |
-| `not`                        | 1 `boolean`               | `boolean` |                                                                                      |
-| `cond`                       | `boolean`, T, T           | T         | Evaluates only the chosen branch.                                                    |
-| `concat`                     | 2 or more `string`        | `string`  |                                                                                      |
-| `toString`                   | 1 `number` or `boolean`   | `string`  |                                                                                      |
-| `length`                     | 1 `string` or `list`      | `number`  |                                                                                      |
-| `at`                         | `list` of T, `number`     | T         | Index must be an integer in range.                                                   |
-| `contains`                   | `list` of T, T            | `boolean` |                                                                                      |
-| `indexOf`                    | `list` of T, T            | `number`  | `-1` when absent.                                                                    |
-| `randomInt`                  | 2 `number` (min, max)     | `number`  | Integer in `[min, max]`; both integers, min ≤ max. Uses the host's `random` service. |
-| `now`                        | none                      | `number`  | The host's `now` service.                                                            |
+| Operator                     | Arguments                 | Result    | Notes                                                                                                        |
+| ---------------------------- | ------------------------- | --------- | ------------------------------------------------------------------------------------------------------------ |
+| `+` `*`                      | 2 or more `number`        | `number`  |                                                                                                              |
+| `-` `/` `%`                  | 2 `number`                | `number`  |                                                                                                              |
+| `min` `max`                  | 2 or more `number`        | `number`  |                                                                                                              |
+| `abs` `floor` `ceil` `round` | 1 `number`                | `number`  | `round` is `Math.round`.                                                                                     |
+| `==` `!=`                    | 2 of the same scalar type | `boolean` | Strict equality. Lists cannot be compared.                                                                   |
+| `<` `<=` `>` `>=`            | 2 `number`                | `boolean` |                                                                                                              |
+| `and` `or`                   | 2 or more `boolean`       | `boolean` | Short-circuit.                                                                                               |
+| `not`                        | 1 `boolean`               | `boolean` |                                                                                                              |
+| `cond`                       | `boolean`, T, T           | T         | Evaluates only the chosen branch.                                                                            |
+| `concat`                     | 2 or more `string`        | `string`  |                                                                                                              |
+| `toString`                   | 1 `number` or `boolean`   | `string`  |                                                                                                              |
+| `length`                     | 1 `string` or `list`      | `number`  |                                                                                                              |
+| `at`                         | `list` of T, `number`     | T         | Index must be an integer in range.                                                                           |
+| `contains`                   | `list` of T, T            | `boolean` |                                                                                                              |
+| `indexOf`                    | `list` of T, T            | `number`  | `-1` when absent.                                                                                            |
+| `randomInt`                  | 2 `number` (min, max)     | `number`  | Integer in `[min, max]`; both integers, min ≤ max, `max - min + 1` finite. Uses the host's `random` service. |
+| `now`                        | none                      | `number`  | The host's `now` service.                                                                                    |
 
 Any `number` an operator produces must be finite. `NaN` and `±Infinity` are
 runtime errors, because JSON cannot store them and they would corrupt a
@@ -436,6 +437,9 @@ guard that reads `payload.price` is valid when used by `select` and a
   (`final-initial-state`).
 - **Isolation.** Outside `with` and `onDone` the contexts are separate. The
   parent cannot read a running child, and a child cannot read its parent.
+- **Children are driven by their parent.** Host code drives only the root.
+  Calling `happens()`, `start()`, `reset()` or `wrapup()` on a child machine
+  directly throws, like `snapshot()` and `restore()` on a child.
 
 `final` and `onDone` exist only in this package. `being` core does not gain
 them.
@@ -466,7 +470,11 @@ later passes need a well-shaped document to walk. Otherwise passes 2–4 run and
 report every error they find. Passes 3 and 4 run as one walk: placement is a
 property of the environment the type checker already carries. A named guard is
 checked at every place it is used; a named guard that nothing uses is checked
-for structure only.
+for structure only, and is not compiled, so no tool can call it.
+
+A load, validation or restore reports at most 1,000 errors. When it found
+more, the list ends with one `limit-exceeded` error at path `''` that says how
+many more there were.
 
 A load either returns a machine or returns errors. It never returns a
 partially built machine.
@@ -475,20 +483,23 @@ partially built machine.
 
 The host can override these defaults:
 
-| Limit                 | Default | Checked                                                                             |
-| --------------------- | ------- | ----------------------------------------------------------------------------------- |
-| `maxNodes`            | 50,000  | Load: total JSON nodes in the document or snapshot.                                 |
-| `maxMachines`         | 64      | Load: machines in `machines` plus the root.                                         |
-| `maxStates`           | 256     | Load: states per machine.                                                           |
-| `maxStatements`       | 256     | Load: statements per list.                                                          |
-| `maxStatementDepth`   | 16      | Load: nested `if` depth.                                                            |
-| `maxExpressionDepth`  | 32      | Load: expression nesting depth.                                                     |
-| `maxNestingDepth`     | 8       | Load: child-machine nesting depth.                                                  |
-| `maxMachineInstances` | 256     | Load: machine instances the tree builds (each state with a `child` builds one).     |
-| `maxListLength`       | 10,000  | Load and runtime: initial values, payloads, every write, effect returns, snapshots. |
-| `maxStringLength`     | 10,000  | Load and runtime: same places as lists.                                             |
+| Limit                 | Default   | Checked                                                                                                                                                                                               |
+| --------------------- | --------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `maxNodes`            | 50,000    | Load: total JSON nodes in the document or snapshot.                                                                                                                                                   |
+| `maxMachines`         | 64        | Load: machines in `machines` plus the root.                                                                                                                                                           |
+| `maxStates`           | 256       | Load: states per machine.                                                                                                                                                                             |
+| `maxStatements`       | 256       | Load: statements per list.                                                                                                                                                                            |
+| `maxStatementDepth`   | 16        | Load: nested `if` depth.                                                                                                                                                                              |
+| `maxExpressionDepth`  | 32        | Load: expression nesting depth.                                                                                                                                                                       |
+| `maxNestingDepth`     | 8         | Load: child-machine nesting depth.                                                                                                                                                                    |
+| `maxMachineInstances` | 256       | Load: machine instances the tree builds (each state with a `child` builds one), and the total size of all machine bodies the tree compiles, counting each instance, is at most four times `maxNodes`. |
+| `maxListLength`       | 10,000    | Load and runtime: initial values, list literals, payloads, every write, effect returns, snapshots.                                                                                                    |
+| `maxStringLength`     | 10,000    | Load and runtime: same places as lists.                                                                                                                                                               |
+| `maxEventWork`        | 1,000,000 | Runtime: work units one event, `start()`, `reset()` or `wrapup()` may use.                                                                                                                            |
 
-Checking also has a work budget: the type checker visits at most four times `maxNodes` expressions, and a named guard counts its whole expression at every place it is used. Pass-1 caps bound nesting but not reuse, so without the budget one large guard referenced thousands of times would multiply the checking work. The same budget bounds the guard work any one event can do at runtime, since an event only evaluates guards the checker already counted.
+Checking also has a work budget: the type checker visits at most four times `maxNodes` expressions, and a named guard counts its whole expression at every place it is used. Pass-1 caps bound nesting but not reuse, so without the budget one large guard referenced thousands of times would multiply the checking work.
+
+Per-event work is bounded by `maxEventWork`: each evaluated expression node and statement costs one unit, plus the length of any list or string an operation copies or scans (`contains`, `indexOf`, a list literal, the result of `concat`, `push`, `removeAt`, every written list or string, and the list arguments and list result of an effect call). An event, `start()`, `reset()` or `wrapup()` that goes over fails with `limit-exceeded` and rolls back like any other failure. A tool calling a guard outside any event is not metered.
 
 ### Prototype safety
 
@@ -497,13 +508,17 @@ interpreter never indexes an ordinary object with an author-supplied key.
 
 ### Runtime checks
 
-- Payloads are validated against the declared event on every `happens()`,
-  and copied, so the host cannot mutate a list after sending it. An event the
-  root does not declare is simply not handled, like `being`.
+- Payloads are copied on every `happens()`, then the copy is validated
+  against the declared event, so the host cannot mutate a list after sending
+  it and the check sees exactly what is stored. Lists are copied by index,
+  never through their iterator. An event the root does not declare is simply
+  not handled, like `being`.
 - Effect arguments are passed to `run` as frozen copies. Effect return values
-  are validated against `returns` and copied before they are written.
+  are copied the same way, then validated against `returns`, before they are
+  written.
 - Numbers must stay finite. Indexes and `randomInt` bounds must be integers,
-  and `randomInt`'s min may not exceed its max (`invalid-range`).
+  and `randomInt`'s min may not exceed its max, nor may the range be too wide
+  to count (`invalid-range`).
 - List and string limits apply to every write. `concat` also checks its
   result against `maxStringLength`, so nested `concat`s cannot build a huge
   string inside one expression.
@@ -527,6 +542,16 @@ If a `being` subscriber (`onStateChange`, `onHappens`, `onEventResult`) throws
 during the event, the tree also rolls back, and the exception is rethrown
 because it is a host bug, not a machine error.
 
+`being` notifies `onEventResult` and `onStateChange` subscribers while the
+event is still running, before the transaction ends: `onEventResult` right
+after the state handles the event, before `exit` and `enter` run, and
+`onStateChange` after `enter`. A subscriber can therefore see a result or a
+state change for an event that then fails and is rolled back, for example
+when the new state's `enter` fails, when a parent's `onDone` fails after a
+child changed state, or when a later subscriber throws. Treat those
+notifications as provisional; the value `happens()` returns and the errors
+`onError` receives are final.
+
 `start()`, `reset()` and `wrapup()` run `enter` and `exit` statements too, so
 each is a transaction under the same rules. A failed `start()` leaves the
 machine in `INITIAL`; with `autoStart`, `loadMachine` still returns the
@@ -542,6 +567,12 @@ other than the parent's own delegation (an effect, a subscriber) returns
 transaction continues. `start()`, `reset()`, `wrapup()` and `snapshot()`
 throw, and `restore()` returns a `reentrant-call` error. Hosts that need to
 raise an event from an effect defer it, for example with `queueMicrotask`.
+
+`onError` may start a new event. An error raised while `onError` runs, such as
+that event's failure, is delivered after `onError` returns, in order. At most
+100 such errors are delivered per report, so an `onError` that keeps causing
+errors cannot loop forever; past that, one `limit-exceeded` error says how
+many were dropped.
 
 ## Host and loading API
 
@@ -645,12 +676,14 @@ compiler and migrations stay internal.
 - `loadMachine` checks that the host supplies every effect the document
   declares with an exactly matching signature (`missing-effect`,
   `effect-signature-mismatch`). Host effects the document does not use are
-  ignored.
+  ignored. The machine keeps the effects it was loaded with; changing the
+  host's effects afterward does not affect it.
 - The host reads context through `machine.context` and can never write it.
   `setContext()` throws. Calling the inherited `switchTo()` directly is
   unsupported.
 - `context.setup()` resets every field to its initial value, so `reset()`
-  gives a fresh machine. `context.cleanup()` does nothing.
+  gives a fresh machine. Only the machine's own `start()` and `reset()` may
+  run it; any other call throws. `context.cleanup()` does nothing.
 - `machine.definition` is the upgraded, normalized document, so loading an
   old file and passing `machine.definition` on passes the current format.
 
@@ -659,7 +692,7 @@ compiler and migrations stay internal.
 Compiled states populate `eventReactions`, `eventGuards` and
 `eventPreconditions`, so `extractMachineGraph` and `@ue-too/being-devtools`
 see the machine. A named guard keeps its name. An inline guard is named with
-its pretty-printed expression (`balance >= price`), truncated to 60
+its pretty-printed expression (`balance >= payload.price`), truncated to 60
 characters and suffixed on collision. `onDone` is registered under the
 reaction key `$done`, which no document event can use (it fails the name
 rule) and which the root never forwards (it is not a declared event), so it
