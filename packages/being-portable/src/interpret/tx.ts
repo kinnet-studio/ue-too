@@ -1,7 +1,7 @@
 import { PortableRuntimeFailure, RuntimeError } from '../errors';
 import { Value } from '../format/types';
 import { describeError } from '../util';
-import { PayloadRecord } from './expr';
+import { PayloadRecord, WorkMeter } from './expr';
 import { EffectCaller } from './stmt';
 import { ContextStore, StoreTransaction } from './store';
 
@@ -31,11 +31,12 @@ export type TxOutcome<T> =
 
 /**
  * One transaction shared by a whole machine tree. It saves each touched
- * store's and machine's previous values, rolls them back on failure, and
- * reports machine failures to the host.
+ * store's and machine's previous values, rolls them back on failure, meters
+ * the work each run does, and reports machine failures to the host.
  */
-export class Transaction implements StoreTransaction, EffectCaller {
+export class Transaction implements StoreTransaction, EffectCaller, WorkMeter {
     private active = false;
+    private work = 0;
     private hostDepth = 0;
     private delegationDepth = 0;
     private reporting = false;
@@ -45,7 +46,10 @@ export class Transaction implements StoreTransaction, EffectCaller {
     private readonly dirty: ContextStore[] = [];
     private readonly savedStates = new Map<TxMachine, string>();
 
-    constructor(private readonly onError: (error: RuntimeError) => void) {}
+    constructor(
+        private readonly onError: (error: RuntimeError) => void,
+        private readonly maxEventWork: number
+    ) {}
 
     get isActive(): boolean {
         return this.active;
@@ -68,6 +72,7 @@ export class Transaction implements StoreTransaction, EffectCaller {
         this.active = true;
         this.event = event;
         this.effectsCalled = [];
+        this.work = 0;
         try {
             const value = body();
             for (const store of this.dirty) {
@@ -132,6 +137,24 @@ export class Transaction implements StoreTransaction, EffectCaller {
             this.onError(error);
         } finally {
             this.reporting = false;
+        }
+    }
+
+    /**
+     * Adds to the running transaction's work; fails it past `maxEventWork`.
+     * Outside a transaction (a tool calling a guard) nothing is metered.
+     */
+    charge(units: number, site: string): void {
+        if (!this.active) {
+            return;
+        }
+        this.work += units;
+        if (this.work > this.maxEventWork) {
+            throw new PortableRuntimeFailure(
+                'limit-exceeded',
+                `the event used more than ${this.maxEventWork} work units`,
+                site
+            );
         }
     }
 

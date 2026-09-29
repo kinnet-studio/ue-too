@@ -3,10 +3,14 @@ import { describe, expect, it } from 'vitest';
 import { PortableRuntimeFailure, RuntimeError } from '../src/errors';
 import { ContextStore } from '../src/interpret/store';
 import { Transaction, TxMachine } from '../src/interpret/tx';
+import { DEFAULT_LIMITS } from '../src/limits';
 
 function setup() {
     const errors: RuntimeError[] = [];
-    const tx = new Transaction(error => errors.push(error));
+    const tx = new Transaction(
+        error => errors.push(error),
+        DEFAULT_LIMITS.maxEventWork
+    );
     const store = new ContextStore({ n: { type: 'number', initial: 0 } }, tx);
     let state = 'A';
     const machine: TxMachine = { rawSetState: next => (state = next) };
@@ -105,9 +109,35 @@ describe('Transaction', () => {
         const tx: Transaction = new Transaction(error => {
             reports.push(error);
             tx.reportReentrant('again', 'happens()');
-        });
+        }, DEFAULT_LIMITS.maxEventWork);
         tx.run('go', () => tx.reportReentrant('x', 'happens()'));
         expect(reports.map(report => report.code)).toEqual(['reentrant-call']);
+    });
+
+    it('meters work inside a transaction only, per run', () => {
+        const errors: RuntimeError[] = [];
+        const tx = new Transaction(error => errors.push(error), 10);
+        tx.charge(100, 'outside');
+        expect(errors).toEqual([]);
+        expect(tx.run('go', () => tx.charge(11, 'do[0]'))).toEqual({
+            ok: false,
+        });
+        expect(errors).toEqual([
+            {
+                code: 'limit-exceeded',
+                message: 'the event used more than 10 work units',
+                path: 'do[0]',
+                event: 'go',
+                effectsCalled: [],
+            },
+        ]);
+        expect(
+            tx.run('go', () => {
+                tx.charge(6, 'do[0]');
+                tx.charge(4, 'do[1]');
+                return 'fits';
+            })
+        ).toEqual({ ok: true, value: 'fits' });
     });
 
     it('stacks event frames', () => {

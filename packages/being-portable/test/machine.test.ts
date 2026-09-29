@@ -193,6 +193,82 @@ describe('atomic events', () => {
     });
 });
 
+describe('work limit', () => {
+    /** Stock of 200 numbers; each guard use scans all of it. */
+    function stockedDoc(): Doc {
+        const doc = vendingDoc();
+        doc.context.stock = {
+            type: 'list',
+            of: 'number',
+            initial: Array.from({ length: 200 }, (_, index) => index),
+        };
+        doc.states.HAS_MONEY.guards.inStock = {
+            op: 'contains',
+            args: [{ ctx: 'stock' }, { payload: 'price' }],
+        };
+        doc.states.HAS_MONEY.guards.soldOut = {
+            op: 'contains',
+            args: [{ ctx: 'stock' }, -1],
+        };
+        return doc;
+    }
+
+    const small = { limits: { maxEventWork: 10_000 } };
+
+    it('fails an event whose guards scan past maxEventWork', () => {
+        const doc = stockedDoc();
+        doc.states.HAS_MONEY.on.select.require = Array.from(
+            { length: 100 },
+            () => 'inStock'
+        );
+        const { host, errors, calls } = recordingHost(small);
+        const machine = load(doc, host);
+        machine.happens('insertCoin', { amount: 3 });
+        expect(machine.happens('select', { item: 'cola', price: 2 })).toEqual({
+            handled: false,
+        });
+        expect(machine.currentState).toBe('HAS_MONEY');
+        expect(machine.context.fields()).toMatchObject({
+            balance: 3,
+            sold: [],
+        });
+        expect(calls).toEqual([]);
+        expect(errors).toMatchObject([
+            { code: 'limit-exceeded', event: 'select' },
+        ]);
+        expect(errors[0].message).toContain('10000 work units');
+    });
+
+    it('rolls back what the event did before it ran out', () => {
+        const doc = stockedDoc();
+        doc.states.HAS_MONEY.on.select.branches = Array.from(
+            { length: 100 },
+            () => ({ if: 'soldOut', target: 'IDLE' })
+        );
+        const { host, errors } = recordingHost(small);
+        const machine = load(doc, host);
+        machine.happens('insertCoin', { amount: 3 });
+        expect(machine.happens('select', { item: 'cola', price: 2 })).toEqual({
+            handled: false,
+        });
+        expect(machine.currentState).toBe('HAS_MONEY');
+        expect(machine.context.fields()).toMatchObject({
+            balance: 3,
+            sold: [],
+        });
+        expect(errors.map(error => error.code)).toEqual(['limit-exceeded']);
+
+        // The budget is per event, and tools calling a guard outside any
+        // event are not metered.
+        expect(machine.happens('insertCoin', { amount: 1 }).handled).toBe(true);
+        const soldOut = machine.states.HAS_MONEY.guards.soldOut;
+        for (let i = 0; i < 100; i++) {
+            expect(soldOut(machine.context)).toBe(false);
+        }
+        expect(errors).toHaveLength(1);
+    });
+});
+
 describe('re-entry', () => {
     it('rejects happens() from inside an effect and keeps the outer event', () => {
         let machine: PortableMachine | null = null;

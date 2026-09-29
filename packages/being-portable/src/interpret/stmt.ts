@@ -37,12 +37,19 @@ function checkString(value: string, env: EvalEnv): void {
     }
 }
 
+/** Items in a list value; `0` for anything else. */
+function listSize(value: unknown): number {
+    return Array.isArray(value) ? value.length : 0;
+}
+
 /**
  * Fails when a value about to be written exceeds the list or string limits,
- * or is a non-finite number (a backstop: operators already check).
+ * or is a non-finite number (a backstop: operators already check). Charges
+ * the written list's or string's length.
  */
 export function checkWrite(value: Value, env: EvalEnv): void {
     if (typeof value === 'string') {
+        env.meter.charge(value.length, env.site);
         checkString(value, env);
         return;
     }
@@ -55,6 +62,7 @@ export function checkWrite(value: Value, env: EvalEnv): void {
     if (typeof value !== 'object') {
         return;
     }
+    env.meter.charge(value.length, env.site);
     if (value.length > env.limits.maxListLength) {
         fail(
             env,
@@ -79,6 +87,7 @@ export function runStatements(
         const statement = statements[index];
         const site = `${path}[${index}]`;
         env.site = site;
+        env.meter.charge(1, site);
         if ('set' in statement) {
             const value = evaluate(statement.to, env);
             checkWrite(value, env);
@@ -86,6 +95,7 @@ export function runStatements(
         } else if ('push' in statement) {
             const item = evaluate(statement.value, env) as ScalarValue;
             const items = env.ctx.get(statement.push) as readonly ScalarValue[];
+            env.meter.charge(items.length, site);
             if (items.length + 1 > env.limits.maxListLength) {
                 fail(
                     env,
@@ -102,6 +112,7 @@ export function runStatements(
             const items = env.ctx.get(
                 statement.removeAt
             ) as readonly ScalarValue[];
+            env.meter.charge(items.length, site);
             if (!Number.isInteger(index)) {
                 fail(
                     env,
@@ -156,10 +167,13 @@ function runCall(
     }
     const args: Record<string, Value> = Object.create(null);
     const given = statement.args ?? {};
+    let argsSize = 0;
     for (const name of Object.keys(given)) {
         args[name] = evaluate(given[name], env);
+        argsSize += listSize(args[name]);
     }
     env.site = site;
+    env.meter.charge(1 + argsSize, site);
     Object.freeze(args);
     const returned = env.calls.callEffect(statement.call, site, () =>
         effect.run(args)
@@ -167,6 +181,7 @@ function runCall(
     if (statement.into === undefined) {
         return;
     }
+    env.meter.charge(listSize(returned), site);
     const returns = effect.returns!;
     const check = checkValue(returned, returns, env.limits);
     if (check !== 'ok') {

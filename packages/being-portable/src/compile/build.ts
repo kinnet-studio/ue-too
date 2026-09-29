@@ -18,7 +18,7 @@ export function buildMachineTree(
     definition: MachineDefinition,
     host: Host
 ): PortableStateMachine {
-    const transaction = new Transaction(host.onError);
+    const transaction = new Transaction(host.onError, host.limits.maxEventWork);
     const services: Services = Object.freeze({
         random: () => transaction.hostCode(() => host.services.random()),
         now: () => transaction.hostCode(() => host.services.now()),

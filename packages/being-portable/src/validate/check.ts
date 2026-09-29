@@ -27,8 +27,8 @@ import { listBodies } from './references';
 
 /**
  * Checking may visit at most `CHECK_WORK_FACTOR × maxNodes` expressions.
- * A named guard counts its whole expression at every place it is used, so
- * this also bounds the guard work any one event can do at runtime.
+ * A named guard counts its whole expression at every place it is used.
+ * Runtime work per event is bounded separately, by `maxEventWork`.
  */
 const CHECK_WORK_FACTOR = 4;
 

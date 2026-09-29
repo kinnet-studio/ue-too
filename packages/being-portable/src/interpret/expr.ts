@@ -8,6 +8,14 @@ import { ContextStore } from './store';
 /** A validated, frozen, null-prototype payload. */
 export type PayloadRecord = Readonly<Record<string, Value>>;
 
+/**
+ * Counts the work an event does. `charge` throws a `PortableRuntimeFailure`
+ * once the event has used more than its budget.
+ */
+export interface WorkMeter {
+    charge(units: number, site: string): void;
+}
+
 /** What an expression can read while it runs. */
 export type EvalEnv = {
     readonly ctx: ContextStore;
@@ -15,6 +23,8 @@ export type EvalEnv = {
     readonly child: ContextStore | null;
     readonly services: Services;
     readonly limits: Limits;
+    /** Charged one unit per node, plus what an operator scans or builds. */
+    readonly meter: WorkMeter;
     /** JSON path reported if evaluation fails. The caller keeps it current. */
     site: string;
 };
@@ -69,10 +79,12 @@ function service(env: EvalEnv, name: 'random' | 'now'): number {
  * checker; only runtime conditions (ranges, finiteness, limits) can fail.
  */
 export function evaluate(expr: Expr, env: EvalEnv): Value {
+    env.meter.charge(1, env.site);
     if (typeof expr !== 'object') {
         return expr;
     }
     if ('list' in expr) {
+        env.meter.charge(expr.list.length, env.site);
         return Object.freeze(
             expr.list.map(item => evaluate(item, env) as ScalarValue)
         );
@@ -165,6 +177,7 @@ function applyOperator(op: string, args: readonly Expr[], env: EvalEnv): Value {
                     );
                 }
             }
+            env.meter.charge(text.length, env.site);
             return text;
         }
         case 'toString':
@@ -185,9 +198,14 @@ function applyOperator(op: string, args: readonly Expr[], env: EvalEnv): Value {
             return items[index];
         }
         case 'contains':
-            return list(0).includes(evaluate(args[1], env) as ScalarValue);
-        case 'indexOf':
-            return list(0).indexOf(evaluate(args[1], env) as ScalarValue);
+        case 'indexOf': {
+            const items = list(0);
+            const item = evaluate(args[1], env) as ScalarValue;
+            env.meter.charge(items.length, env.site);
+            return op === 'contains'
+                ? items.includes(item)
+                : items.indexOf(item);
+        }
         case 'randomInt': {
             const min = integer(number(0), 'randomInt min', env);
             const max = integer(number(1), 'randomInt max', env);

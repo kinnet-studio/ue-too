@@ -3,7 +3,7 @@ import { describe, expect, it } from 'vitest';
 import { PortableRuntimeFailure } from '../src/errors';
 import { Expr, Stmt, Value } from '../src/format/types';
 import { HostEffect, Services } from '../src/host';
-import { EvalEnv, evaluate } from '../src/interpret/expr';
+import { EvalEnv, WorkMeter, evaluate } from '../src/interpret/expr';
 import { validatePayload } from '../src/interpret/payload';
 import {
     EffectCaller,
@@ -16,6 +16,19 @@ import { ContextStore, StoreTransaction } from '../src/interpret/store';
 import { DEFAULT_LIMITS, Limits } from '../src/limits';
 
 const idle: StoreTransaction = { isActive: false, markDirty: () => {} };
+
+const noMeter: WorkMeter = { charge: () => {} };
+
+/** A meter that adds up every charge. */
+function countingMeter(): WorkMeter & { units: number } {
+    const meter = {
+        units: 0,
+        charge(units: number) {
+            meter.units += units;
+        },
+    };
+    return meter;
+}
 
 function store(): ContextStore {
     return new ContextStore(
@@ -38,6 +51,7 @@ function env(
         child: null,
         services: { random: () => 0.5, now: () => 1000, ...services },
         limits: DEFAULT_LIMITS,
+        meter: noMeter,
         site: 'here',
         ...overrides,
     };
@@ -134,6 +148,27 @@ describe('evaluate', () => {
         expect(failure(() => evaluate(op('now'), throwing)).message).toContain(
             'clock down'
         );
+    });
+
+    it('charges one unit per node plus what an operator scans or builds', () => {
+        const cost = (expr: Expr) => {
+            const meter = countingMeter();
+            evaluate(expr, env({ meter }));
+            return meter.units;
+        };
+        expect(cost(3)).toBe(1);
+        expect(cost({ ctx: 'n' })).toBe(1);
+        expect(cost(op('+', 1, 2))).toBe(3);
+        // node + its 2 items + the 2-item list it builds
+        expect(cost({ list: [1, 2] })).toBe(5);
+        // node + list + needle + the 3 items it scans
+        expect(cost(op('contains', { ctx: 'items' }, 3))).toBe(6);
+        expect(cost(op('indexOf', { ctx: 'items' }, 9))).toBe(6);
+        // node + 2 args + the 3 characters it builds
+        expect(cost(op('concat', 'ab', 'c'))).toBe(6);
+        expect(cost(op('length', { ctx: 'items' }))).toBe(2);
+        expect(cost(op('at', { ctx: 'items' }, 0))).toBe(3);
+        expect(cost(op('toString', 1))).toBe(2);
     });
 
     it('caps concat results', () => {
@@ -289,6 +324,39 @@ describe('runStatements', () => {
         expect(failure(() => checkWrite(Number.NaN, env())).code).toBe(
             'non-finite-number'
         );
+    });
+
+    it('charges one unit per statement plus what it copies or scans', () => {
+        const cost = (statement: Stmt, effects = {}) => {
+            const meter = countingMeter();
+            const { env: e } = stmtEnv({ meter }, effects);
+            runStatements([statement], e, 'do');
+            return meter.units;
+        };
+        expect(cost({ set: 'n', to: 1 })).toBe(2);
+        // statement + literal + the 3 characters written
+        expect(cost({ set: 's', to: 'hey' })).toBe(5);
+        // statement + literal + the 3-item list it copies
+        expect(cost({ push: 'items', value: 4 })).toBe(5);
+        expect(cost({ removeAt: 'items', index: 0 })).toBe(5);
+        // statement + list node, item and length + the 1 item written
+        expect(cost({ set: 'items', to: { list: [1] } })).toBe(5);
+        // statement + arg + call + the 3-item list argument + 2 items returned
+        expect(
+            cost(
+                {
+                    call: 'pick',
+                    args: { from: { ctx: 'items' } },
+                    into: 'items',
+                },
+                {
+                    pick: {
+                        returns: { kind: 'list', of: 'number' },
+                        run: () => [7, 8],
+                    },
+                }
+            )
+        ).toBe(8);
     });
 
     it('enforces list and string limits on writes', () => {

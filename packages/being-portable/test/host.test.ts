@@ -12,6 +12,7 @@ describe('defineHost', () => {
         expect(host.effects.size).toBe(0);
         expect(typeof host.services.random()).toBe('number');
         expect(host.limits.maxNodes).toBe(50_000);
+        expect(host.limits.maxEventWork).toBe(1_000_000);
         expect(Object.isFrozen(host)).toBe(true);
     });
 

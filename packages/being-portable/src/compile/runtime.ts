@@ -48,6 +48,7 @@ export function evalEnv(
         child: frame?.child ?? null,
         services: runtime.services,
         limits: runtime.host.limits,
+        meter: runtime.transaction,
         site: '',
     };
 }

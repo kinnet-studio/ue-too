@@ -1,5 +1,5 @@
 /**
- * Caps that keep a document from a stranger from exhausting memory.
+ * Caps that keep a document from a stranger from exhausting memory or time.
  *
  * @category Types
  */
@@ -24,6 +24,12 @@ export type Limits = {
     readonly maxListLength: number;
     /** Characters in any string value. */
     readonly maxStringLength: number;
+    /**
+     * Work units one event, start, reset or wrapup may use. Each evaluated
+     * expression node and statement costs one unit, plus the length of any
+     * list or string an operation copies or scans.
+     */
+    readonly maxEventWork: number;
 };
 
 /**
@@ -42,6 +48,7 @@ export const DEFAULT_LIMITS: Limits = Object.freeze({
     maxMachineInstances: 256,
     maxListLength: 10_000,
     maxStringLength: 10_000,
+    maxEventWork: 1_000_000,
 });
 
 /** Defaults with overrides applied. Throws on a non-positive or non-integer override. */
