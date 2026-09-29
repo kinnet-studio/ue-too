@@ -448,17 +448,25 @@ them.
 input is copied into fresh, frozen, null-prototype plain data. The copy step
 rejects anything that is not JSON-shaped data: functions, symbols, class
 instances, getters, cycles, and non-finite numbers. It counts nodes as it goes
-and stops at `maxNodes`. From then on the package only reads its own copy, so
-nothing the caller does to the original afterward matters. Callers that read
-text should also cap the text length before `JSON.parse`.
+and stops at `maxNodes`, and it stops at a fixed nesting depth of 256 so the
+walk can never exhaust the call stack. From then on the package only reads its
+own copy, so nothing the caller does to the original afterward matters.
+Callers that read text should also cap the text length before `JSON.parse`.
 
-Validation then runs four passes and collects every error:
+Validation then runs four passes:
 
 1. **Structure:** the document has the shape of a definition.
 2. **References:** every named state, event, field, effect, guard and machine
    exists; no machine cycles.
 3. **Types:** every expression and statement type-checks.
 4. **Placement:** every construct is used where it is allowed.
+
+If pass 1 finds errors, validation stops and reports all of them, because the
+later passes need a well-shaped document to walk. Otherwise passes 2–4 run and
+report every error they find. Passes 3 and 4 run as one walk: placement is a
+property of the environment the type checker already carries. A named guard is
+checked at every place it is used; a named guard that nothing uses is checked
+for structure only.
 
 A load either returns a machine or returns errors. It never returns a
 partially built machine.
@@ -467,17 +475,18 @@ partially built machine.
 
 The host can override these defaults:
 
-| Limit                | Default | Checked                                                                             |
-| -------------------- | ------- | ----------------------------------------------------------------------------------- |
-| `maxNodes`           | 50,000  | Load: total JSON nodes in the document or snapshot.                                 |
-| `maxMachines`        | 64      | Load: machines in `machines` plus the root.                                         |
-| `maxStates`          | 256     | Load: states per machine.                                                           |
-| `maxStatements`      | 256     | Load: statements per list.                                                          |
-| `maxStatementDepth`  | 16      | Load: nested `if` depth.                                                            |
-| `maxExpressionDepth` | 32      | Load: expression nesting depth.                                                     |
-| `maxNestingDepth`    | 8       | Load: child-machine nesting depth.                                                  |
-| `maxListLength`      | 10,000  | Load and runtime: initial values, payloads, every write, effect returns, snapshots. |
-| `maxStringLength`    | 10,000  | Load and runtime: same places as lists.                                             |
+| Limit                 | Default | Checked                                                                             |
+| --------------------- | ------- | ----------------------------------------------------------------------------------- |
+| `maxNodes`            | 50,000  | Load: total JSON nodes in the document or snapshot.                                 |
+| `maxMachines`         | 64      | Load: machines in `machines` plus the root.                                         |
+| `maxStates`           | 256     | Load: states per machine.                                                           |
+| `maxStatements`       | 256     | Load: statements per list.                                                          |
+| `maxStatementDepth`   | 16      | Load: nested `if` depth.                                                            |
+| `maxExpressionDepth`  | 32      | Load: expression nesting depth.                                                     |
+| `maxNestingDepth`     | 8       | Load: child-machine nesting depth.                                                  |
+| `maxMachineInstances` | 256     | Load: machine instances the tree builds (each state with a `child` builds one).     |
+| `maxListLength`       | 10,000  | Load and runtime: initial values, payloads, every write, effect returns, snapshots. |
+| `maxStringLength`     | 10,000  | Load and runtime: same places as lists.                                             |
 
 ### Prototype safety
 
@@ -491,8 +500,11 @@ interpreter never indexes an ordinary object with an author-supplied key.
   root does not declare is simply not handled, like `being`.
 - Effect arguments are passed to `run` as frozen copies. Effect return values
   are validated against `returns` and copied before they are written.
-- Numbers must stay finite. Indexes and `randomInt` bounds must be integers.
-- List and string limits apply to every write.
+- Numbers must stay finite. Indexes and `randomInt` bounds must be integers,
+  and `randomInt`'s min may not exceed its max (`invalid-range`).
+- List and string limits apply to every write. `concat` also checks its
+  result against `maxStringLength`, so nested `concat`s cannot build a huge
+  string inside one expression.
 
 ### Atomic events
 
@@ -576,11 +588,16 @@ export type LoadResult =
     | { ok: true; machine: PortableMachine; restoreReport?: RestoreReport }
     | { ok: false; errors: LoadError[] };
 
+// Events are only known at runtime: happens() takes any event name and an
+// optional payload, and outputs are `unknown` statically.
+export type PortableEvents = Record<never, never>;
+export type PortableOutputs = Record<never, never>;
+
 export interface PortableMachine extends StateMachine<
-    Record<string, Record<string, Value>>,
+    PortableEvents,
     PortableContext,
     string,
-    Record<string, Value>
+    PortableOutputs
 > {
     /** The normalized document, upgraded to the current format, frozen. */
     readonly definition: MachineDefinition;
@@ -605,11 +622,18 @@ export type Value =
 ```
 
 Exported from the entry point: `defineHost`, `validateDefinition`,
-`loadMachine`, and the types `MachineDefinition`, `MachineSnapshot`,
-`HostDefinition`, `Host`, `Limits`, `TypeSpec`, `Value`, `LoadError`,
-`RuntimeError`, `ValidationResult`, `LoadResult`, `RestoreResult`,
-`RestoreReport`, `PortableMachine`, `PortableContext`. Nothing else; the
-checker, interpreter, compiler and migrations stay internal.
+`loadMachine`, `DEFAULT_LIMITS`; the result and option types
+(`ValidationResult`, `LoadOptions`, `LoadResult`, `RestoreMode`,
+`RestoreReport`, `RestoreResult`); the machine types (`PortableMachine`,
+`PortableContext`, `PortableEvents`, `PortableOutputs`); the host types
+(`HostDefinition`, `Host`, `EffectImplementation`, `HostEffect`, `Services`,
+`ValueType`, `Limits`); the error types (`LoadError`, `LoadErrorCode`, `RuntimeError`,
+`RuntimeErrorCode`); and the document types (`MachineDefinition`,
+`MachineBody`, `StateDefinition`, `Reaction`, `DoneReaction`, `Branch`,
+`ChildDefinition`, `ContextFieldDefinition`, `EffectDeclaration`, `Expr`,
+`GuardRef`, `Stmt`, `TypeSpec`, `Scalar`, `ScalarValue`, `Value`,
+`MachineSnapshot`, `LevelSnapshot`). Nothing else; the checker, interpreter,
+compiler and migrations stay internal.
 
 ### Behavior
 
@@ -716,7 +740,7 @@ path into the definition or snapshot, e.g.
 | Copy    | `not-plain-data`, `limit-exceeded`                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      |
 | Format  | `unsupported-format`                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    |
 | Load    | `invalid-structure`, `invalid-name`, `reserved-name`, `unknown-state`, `unknown-event`, `unknown-field`, `unknown-effect`, `unknown-guard`, `unknown-machine`, `unknown-operator`, `machine-cycle`, `type-mismatch`, `arity-mismatch`, `misplaced`, `empty-list-needs-type`, `output-not-declared`, `into-without-returns`, `child-event-mismatch`, `on-done-without-child`, `on-done-unreachable`, `final-initial-state`, `final-state-has-reactions`, `missing-effect`, `effect-signature-mismatch`, `limit-exceeded` |
-| Runtime | `payload-mismatch`, `index-out-of-range`, `not-an-integer`, `non-finite-number`, `limit-exceeded`, `effect-failed`, `effect-return-mismatch`, `service-invalid`, `reentrant-call`                                                                                                                                                                                                                                                                                                                                       |
+| Runtime | `payload-mismatch`, `index-out-of-range`, `not-an-integer`, `invalid-range`, `non-finite-number`, `limit-exceeded`, `effect-failed`, `effect-return-mismatch`, `service-invalid`, `reentrant-call`                                                                                                                                                                                                                                                                                                                      |
 | Restore | `unsupported-format`, `machine-mismatch`, `revision-mismatch`, `state-missing`, `field-mismatch`, `child-missing`, `child-unexpected`, `limit-exceeded`, `reentrant-call`                                                                                                                                                                                                                                                                                                                                               |
 
 ## Architecture
@@ -736,32 +760,51 @@ mid-level layer. Created with `bun run scaffold:package being-portable`.
 ```
 packages/being-portable/src/
   index.ts          public exports
-  format/types.ts   MachineDefinition, MachineSnapshot, TypeSpec, Value
+  api.ts            validateDefinition, loadMachine
+  api-types.ts      PortableMachine, PortableContext, results and options
+  host.ts           defineHost, effect signature matching, services
+  limits.ts         Limits and their defaults
+  errors.ts         LoadError, RuntimeError, PortableRuntimeFailure
+  util.ts           hasOwn, entriesOf, joinPath
   copy.ts           unknown → frozen null-prototype plain data; node counting
-  migrate.ts        format upgrades (identity for @1)
+  migrate.ts        format upgrades (none yet for @1)
+  snapshot.ts       snapshot, strict and structural restore
+  format/
+    types.ts        the document and snapshot types
+    values.ts       ValueType, parseTypeSpec, checkValue
   validate/
+    index.ts        checkDefinition: migrate, then passes 1–4
+    names.ts        name rules
     structure.ts    pass 1
-    references.ts   pass 2, including machine cycles
-    types.ts        pass 3: expression and statement type checking
-    placement.ts    pass 4
-    errors.ts       LoadError, error codes, paths
+    references.ts   pass 2, including machine cycles, nesting and instances
+    check.ts        passes 3 and 4 in one walk
+    operators.ts    operator arity and typing table
   interpret/
+    store.ts        context store with copy-on-write rollback
     expr.ts         expression evaluator
     stmt.ts         statement runner
-    store.ts        context store with copy-on-write transactions
-    tx.ts           tree-wide transaction, re-entry guard, effectsCalled
+    payload.ts      payload validation
+    tx.ts           tree-wide transaction, re-entry guard, effect calls, frames
   compile/
+    runtime.ts      MachineRuntime and interpreter environments
+    context.ts      PortableContextImpl
+    names.ts        guard labels for introspection
+    parts.ts        guards, on and onDone → being's reaction and guard maps
     state.ts        PortableState extends TemplateState
     delegating.ts   PortableDelegatingState extends DelegatingState (with/onDone)
     machine.ts      PortableStateMachine extends TemplateStateMachine
-    names.ts        guard pretty-printing for introspection
-  host.ts           defineHost, effect signature matching, services
-  snapshot.ts       snapshot, strict and structural restore
+    build.ts        builds the machine tree
 ```
 
-`validate/`, `interpret/expr.ts`, `interpret/stmt.ts`, `interpret/store.ts`,
-`copy.ts` and `migrate.ts` know nothing about `being`. Only `compile/` and
-`snapshot.ts` touch `being` classes.
+`format/`, `validate/`, `interpret/`, `copy.ts` and `migrate.ts` know
+nothing about `being`. Only `compile/`, `api-types.ts` and `snapshot.ts`
+touch `being`.
+
+The compiled `being` classes are parameterized on the public
+`PortableContext` interface, not on the implementation class: `being`'s
+guard type is a function property, so it is contravariant in the context
+type, and a machine typed on the implementation would not satisfy
+`PortableMachine`.
 
 ### How compiled pieces reach the payload
 
@@ -803,8 +846,12 @@ Run with `bunx nx test being-portable`.
   produces the same states and outputs as the hand-written machine for the
   same event sequence.
 - **Integration:** `extractMachineGraph` on a loaded machine lists the
-  expected edges, including named and inline guards and `$done`; a loaded
-  machine attaches to `@ue-too/being-devtools`.
+  expected edges, including named and inline guards. Tools that call guards
+  directly with only the context, as `@ue-too/being-devtools` does, get a
+  working answer from a guard that reads only `ctx` and an exception from
+  one that reads `payload`. `PortableMachine` extends `being`'s
+  `StateMachine`, which is what devtools' structural `MachineLike` accepts;
+  the package takes no test-time dependency on devtools.
 - **Benchmark:** `happens()` on the vending document and on a nested document,
   against the 16.67 ms frame budget.
 
@@ -825,15 +872,21 @@ already published.
 
 ## Build order
 
-1. Scaffold the package; `bunx nx build being-portable` green with
-   `@ue-too/being` external.
-2. `format/types.ts`, `copy.ts`, `migrate.ts` with tests.
-3. Validator passes 1–4 with the error corpus.
-4. Interpreter: `expr.ts`, `stmt.ts`, `store.ts`.
-5. Compile flat machines; parity test against the vending example.
-6. Transactions, rollback, re-entry; host effects and services.
-7. Nested machines: `with`, `final`, `onDone`, child checks.
-8. Snapshot, strict and structural restore; round-trip tests.
-9. Introspection names; `extractMachineGraph` and devtools integration.
-10. Benchmark.
-11. README, TypeDoc config with `@group` tags, `CLAUDE.md` structure line.
+The implementation plan
+([2026-09-29-being-portable.md](../plans/2026-09-29-being-portable.md))
+follows this order; every step leaves the package compiling and its tests
+green.
+
+1. Scaffold the package; format types, value checks, limits and errors.
+2. The copy step and format migrations.
+3. Validator pass 1 (structure) and the name rules.
+4. Validator passes 2–4.
+5. `defineHost`, effect signature checks and `validateDefinition`.
+6. Interpreter: context store, expressions, statements, payloads.
+7. The transaction: rollback, re-entry, effect calls, event frames.
+8. Compile flat machines and `loadMachine`; parity with the vending example;
+   introspection names.
+9. Nested machines: `with`, `final`, `onDone`.
+10. Snapshot, strict and structural restore.
+11. Public exports, benchmark, README, TypeDoc (`@category` tags, as in
+    `being`), `CLAUDE.md` structure line.
