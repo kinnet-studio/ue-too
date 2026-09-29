@@ -5,6 +5,7 @@ import {
     describeType,
     isScalarName,
     parseTypeSpec,
+    scalarType,
 } from '../format/values';
 import { Limits } from '../limits';
 import { hasOwn, joinPath } from '../util';
@@ -182,9 +183,11 @@ class StructureChecker {
             isList ? ['type', 'of', 'initial'] : ['type', 'initial'],
             []
         );
-        const type = parseTypeSpec(
-            isList ? { type: field.type, of: field.of } : field.type
-        );
+        const type = isList
+            ? parseTypeSpec({ type: field.type, of: field.of })
+            : isScalarName(field.type)
+              ? scalarType(field.type)
+              : null;
         if (type === null) {
             this.fail(
                 'invalid-structure',

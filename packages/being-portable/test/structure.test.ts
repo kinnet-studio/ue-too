@@ -59,11 +59,16 @@ describe('checkStructure', () => {
         doc.context.balance.initial = 'zero';
         doc.context.bad = { type: 'object', initial: 1 };
         doc.context.items = { type: 'list', initial: [] };
+        doc.context.nested = {
+            type: { type: 'list', of: 'string' },
+            initial: [],
+        };
         expect(structureErrors(doc)).toEqual([
             { code: 'type-mismatch', path: 'context.balance.initial' },
             { code: 'invalid-structure', path: 'context.bad.type' },
             { code: 'invalid-structure', path: 'context.items' },
             { code: 'invalid-structure', path: 'context.items.type' },
+            { code: 'invalid-structure', path: 'context.nested.type' },
         ]);
     });
 
