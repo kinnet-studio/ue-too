@@ -3,6 +3,7 @@ import { describe, expect, it } from 'vitest';
 
 import { loadMachine } from '../src/api';
 import { PortableMachine } from '../src/api-types';
+import { uniqueName } from '../src/compile/names';
 import { Host } from '../src/host';
 import { Doc, vendingDoc } from './fixtures';
 import { recordingHost } from './recording-host';
@@ -269,6 +270,31 @@ describe('introspection', () => {
                 preconditions: ['canAfford'],
             },
         ]);
+    });
+
+    it('numbers repeated inline guard names from a counter per name', () => {
+        const taken = new Set<string>();
+        const counters = new Map<string, number>();
+        const names = [1, 2, 3].map(() => {
+            const name = uniqueName('x', taken, counters);
+            taken.add(name);
+            return name;
+        });
+        expect(names).toEqual(['x', 'x #2', 'x #3']);
+        expect(counters.get('x')).toBe(4);
+    });
+
+    it('names thousands of identical inline guards apart', () => {
+        const doc = vendingDoc();
+        doc.states.HAS_MONEY.on.select.require = Array.from(
+            { length: 5000 },
+            () => true
+        );
+        const machine = load(doc, recordingHost().host);
+        const names = machine.states.HAS_MONEY.eventPreconditions.select!;
+        expect(names).toHaveLength(5000);
+        expect(new Set(names).size).toBe(5000);
+        expect(names.slice(0, 3)).toEqual(['true', 'true #2', 'true #3']);
     });
 
     it('lets tools call ctx-only guards outside an event', () => {

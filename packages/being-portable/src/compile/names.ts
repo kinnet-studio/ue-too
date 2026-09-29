@@ -70,14 +70,23 @@ export function guardLabel(expr: Expr): string {
         : text;
 }
 
-/** `base`, or `base #2`, `base #3`… when taken. */
-export function uniqueName(base: string, taken: ReadonlySet<string>): string {
+/**
+ * `base`, or `base #2`, `base #3`… when taken. `counters` remembers the next
+ * suffix to try for each base, so naming many copies of one guard stays
+ * linear instead of rescanning from `#2` every time.
+ */
+export function uniqueName(
+    base: string,
+    taken: ReadonlySet<string>,
+    counters: Map<string, number>
+): string {
     if (!taken.has(base)) {
         return base;
     }
-    let suffix = 2;
+    let suffix = counters.get(base) ?? 2;
     while (taken.has(`${base} #${suffix}`)) {
         suffix += 1;
     }
+    counters.set(base, suffix + 1);
     return `${base} #${suffix}`;
 }

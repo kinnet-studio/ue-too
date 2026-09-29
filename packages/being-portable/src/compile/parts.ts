@@ -71,6 +71,7 @@ export function compileStateParts(
         Object.create(null);
     const eventPreconditions: Record<string, string[]> = Object.create(null);
     const taken = new Set<string>();
+    const counters = new Map<string, number>();
 
     for (const [name, expr] of entriesOf(state.guards)) {
         taken.add(name);
@@ -84,7 +85,7 @@ export function compileStateParts(
         if (typeof ref === 'string') {
             return ref;
         }
-        const name = uniqueName(guardLabel(ref), taken);
+        const name = uniqueName(guardLabel(ref), taken, counters);
         taken.add(name);
         guards[name] = compileGuard(runtime, ref, site);
         return name;
