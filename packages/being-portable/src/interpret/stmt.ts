@@ -37,10 +37,19 @@ function checkString(value: string, env: EvalEnv): void {
     }
 }
 
-/** Fails when a value about to be written exceeds the list or string limits. */
+/**
+ * Fails when a value about to be written exceeds the list or string limits,
+ * or is a non-finite number (a backstop: operators already check).
+ */
 export function checkWrite(value: Value, env: EvalEnv): void {
     if (typeof value === 'string') {
         checkString(value, env);
+        return;
+    }
+    if (typeof value === 'number') {
+        if (!Number.isFinite(value)) {
+            fail(env, 'non-finite-number', `cannot write ${value}`);
+        }
         return;
     }
     if (typeof value !== 'object') {

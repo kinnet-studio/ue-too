@@ -198,7 +198,19 @@ function applyOperator(op: string, args: readonly Expr[], env: EvalEnv): Value {
                     `randomInt min ${min} is greater than max ${max}`
                 );
             }
-            return min + Math.floor(service(env, 'random') * (max - min + 1));
+            const width = max - min + 1;
+            if (!Number.isFinite(width)) {
+                fail(
+                    env,
+                    'invalid-range',
+                    `randomInt range from ${min} to ${max} is too wide to count`
+                );
+            }
+            return finite(
+                min + Math.floor(service(env, 'random') * width),
+                op,
+                env
+            );
         }
         case 'now':
             return service(env, 'now');

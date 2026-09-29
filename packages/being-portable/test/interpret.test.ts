@@ -9,6 +9,7 @@ import {
     EffectCaller,
     OutputSink,
     StmtEnv,
+    checkWrite,
     runStatements,
 } from '../src/interpret/stmt';
 import { ContextStore, StoreTransaction } from '../src/interpret/store';
@@ -265,6 +266,29 @@ describe('runStatements', () => {
             code: 'index-out-of-range',
             path: 'on.x.do[0].then[1]',
         });
+    });
+
+    it('rejects a randomInt range too wide to count, changing nothing', () => {
+        const { env: e } = stmtEnv();
+        expect(
+            failure(() =>
+                runStatements(
+                    [{ set: 'n', to: op('randomInt', -1e308, 1e308) }],
+                    e,
+                    'do'
+                )
+            )
+        ).toMatchObject({ code: 'invalid-range', path: 'do[0]' });
+        expect(e.ctx.get('n')).toBe(2);
+    });
+
+    it('never writes a non-finite number', () => {
+        expect(
+            failure(() => checkWrite(Number.POSITIVE_INFINITY, env())).code
+        ).toBe('non-finite-number');
+        expect(failure(() => checkWrite(Number.NaN, env())).code).toBe(
+            'non-finite-number'
+        );
     });
 
     it('enforces list and string limits on writes', () => {
