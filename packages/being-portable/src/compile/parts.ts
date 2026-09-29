@@ -54,10 +54,27 @@ function compileAction(
     };
 }
 
+/** Named guards a state's `require`s and branches refer to. */
+function usedGuardNames(state: StateDefinition): Set<string> {
+    const used = new Set<string>();
+    const note = (ref: GuardRef) => {
+        if (typeof ref === 'string') {
+            used.add(ref);
+        }
+    };
+    for (const [, reaction] of entriesOf(state.on)) {
+        reaction.require?.forEach(note);
+        reaction.branches?.forEach(branch => note(branch.if));
+    }
+    state.onDone?.branches?.forEach(branch => note(branch.if));
+    return used;
+}
+
 /**
  * Turns one state's `guards`, `on` and `onDone` into the maps being reads.
  * Named guards keep their names; inline guards are named by their printed
- * expression.
+ * expression. A named guard nothing refers to is never type-checked, so it
+ * is not compiled either.
  */
 export function compileStateParts(
     runtime: MachineRuntime,
@@ -73,13 +90,16 @@ export function compileStateParts(
     const taken = new Set<string>();
     const counters = new Map<string, number>();
 
+    const used = usedGuardNames(state);
     for (const [name, expr] of entriesOf(state.guards)) {
         taken.add(name);
-        guards[name] = compileGuard(
-            runtime,
-            expr,
-            joinPath(joinPath(statePath, 'guards'), name)
-        );
+        if (used.has(name)) {
+            guards[name] = compileGuard(
+                runtime,
+                expr,
+                joinPath(joinPath(statePath, 'guards'), name)
+            );
+        }
     }
     const guardName = (ref: GuardRef, site: string): string => {
         if (typeof ref === 'string') {

@@ -373,12 +373,23 @@ describe('introspection', () => {
         expect(names.slice(0, 3)).toEqual(['true', 'true #2', 'true #3']);
     });
 
+    it('does not compile a named guard that nothing uses', () => {
+        const doc = vendingDoc();
+        // Never used, so never type-checked: it must not become callable.
+        doc.states.HAS_MONEY.guards.unused = { ctx: 'balance' };
+        const machine = load(doc, recordingHost().host);
+        const guards = machine.states.HAS_MONEY.guards;
+        expect(Object.keys(guards)).toEqual(['canAfford', 'balance > 0']);
+        expect(guards.unused).toBeUndefined();
+    });
+
     it('lets tools call ctx-only guards outside an event', () => {
         const doc = vendingDoc();
         doc.states.HAS_MONEY.guards.hasMoney = {
             op: '>',
             args: [{ ctx: 'balance' }, 0],
         };
+        doc.states.HAS_MONEY.on.cancel.require = ['hasMoney'];
         const machine = load(doc, recordingHost().host);
         machine.happens('insertCoin', { amount: 1 });
         const guards = machine.states.HAS_MONEY.guards;
