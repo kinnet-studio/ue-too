@@ -4,6 +4,7 @@ import { ContextStore } from '../interpret/store';
 import { Transaction } from '../interpret/tx';
 import { entriesOf, joinPath } from '../util';
 import { PortableContextImpl } from './context';
+import { PortableDelegatingState } from './delegating';
 import { PortableStateInstance, PortableStateMachine } from './machine';
 import { MachineRuntime } from './runtime';
 import { PortableState } from './state';
@@ -48,7 +49,18 @@ export function buildMachineTree(
             Object.create(null);
         for (const [name, state] of entriesOf(body.states)) {
             const statePath = joinPath(joinPath(path, 'states'), name);
-            states[name] = new PortableState(runtime, state, statePath);
+            if (state.child !== undefined) {
+                const child = build(state.child.machine);
+                runtime.children.set(name, child);
+                states[name] = new PortableDelegatingState(
+                    child,
+                    runtime,
+                    state,
+                    statePath
+                );
+            } else {
+                states[name] = new PortableState(runtime, state, statePath);
+            }
         }
         return new PortableStateMachine(states, body.initialState, runtime);
     };
