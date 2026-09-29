@@ -1,4 +1,5 @@
-import { ValidationResult } from './api-types';
+import { LoadOptions, LoadResult, ValidationResult } from './api-types';
+import { buildMachineTree } from './compile/build';
 import { copyPlainData } from './copy';
 import { Host, checkHostEffects } from './host';
 import { DEFAULT_LIMITS, Limits, resolveLimits } from './limits';
@@ -31,4 +32,33 @@ export function validateDefinition(
     }
     const hostErrors = checkHostEffects(checked.definition, options.host);
     return hostErrors.length > 0 ? { ok: false, errors: hostErrors } : checked;
+}
+
+/**
+ * Validates an untrusted document and builds its machine. Returns every error
+ * instead of a machine when the document is invalid.
+ *
+ * @example
+ * ```ts
+ * const result = loadMachine(JSON.parse(text), host);
+ * if (!result.ok) return showErrors(result.errors);
+ * result.machine.happens('insertCoin', { amount: 1 });
+ * ```
+ *
+ * @category Core
+ */
+export function loadMachine(
+    document: unknown,
+    host: Host,
+    options: LoadOptions = {}
+): LoadResult {
+    const validated = validateDefinition(document, { host });
+    if (!validated.ok) {
+        return validated;
+    }
+    const machine = buildMachineTree(validated.definition, host);
+    if (options.autoStart ?? true) {
+        machine.start();
+    }
+    return { ok: true, machine };
 }
