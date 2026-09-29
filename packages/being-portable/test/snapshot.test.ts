@@ -182,6 +182,28 @@ describe('restore', () => {
         expect(machine.snapshot()).toEqual(before);
     });
 
+    it('reports at most 1000 errors', () => {
+        const machine = load(vendingDoc());
+        const context: Record<string, number> = { balance: 0 };
+        for (let i = 0; i < 1500; i++) {
+            context[`x${i}`] = 1;
+        }
+        const result = machine.restore({
+            format: 'being-snapshot@1',
+            machine: { id: 'vending', revision: 1 },
+            state: 'IDLE',
+            context,
+        });
+        expect(result.ok).toBe(false);
+        if (result.ok) return;
+        expect(result.errors).toHaveLength(1001);
+        expect(result.errors[1000]).toMatchObject({
+            code: 'limit-exceeded',
+            path: '',
+        });
+        expect(result.errors[1000].message).toContain('501 more errors');
+    });
+
     it('rejects values past the limits', () => {
         const result = loadMachine(
             vendingDoc(),

@@ -1,7 +1,7 @@
 import { RestoreMode, RestoreResult } from './api-types';
 import type { PortableStateMachine } from './compile/machine';
 import { PlainData, PlainObject, copyPlainData, isPlainObject } from './copy';
-import { LoadError, loadError } from './errors';
+import { LoadError, capErrors, loadError } from './errors';
 import {
     LevelSnapshot,
     MachineDefinition,
@@ -90,13 +90,13 @@ export function restoreSnapshot(
     const errors: LoadError[] = [];
     checkHeader(migrated.value, runtime.definition, mode, errors);
     if (errors.length > 0) {
-        return { ok: false, errors };
+        return { ok: false, errors: capErrors(errors) };
     }
     const report: Report = { dropped: [], defaulted: [] };
     const plan: PlannedLevel[] = [];
     planLevel(machine, migrated.value, '', true, mode, plan, report, errors);
     if (errors.length > 0) {
-        return { ok: false, errors };
+        return { ok: false, errors: capErrors(errors) };
     }
     resetTree(machine);
     for (const level of plan) {

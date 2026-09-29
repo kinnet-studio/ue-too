@@ -115,6 +115,23 @@ describe('host effect checks', () => {
         expect(result.errors[0].message).toContain('(item: string)');
     });
 
+    it('caps the host effect errors it reports', () => {
+        const doc = vendingDoc();
+        for (let i = 0; i < 1500; i++) {
+            doc.effects[`e${i}`] = { args: {} };
+        }
+        const result = validateDefinition(doc, { host: defineHost() });
+        expect(result.ok).toBe(false);
+        if (result.ok) return;
+        expect(result.errors).toHaveLength(1001);
+        expect(result.errors[0].code).toBe('missing-effect');
+        expect(result.errors[1000]).toMatchObject({
+            code: 'limit-exceeded',
+            path: '',
+        });
+        expect(result.errors[1000].message).toContain('502 more errors');
+    });
+
     it('uses the host limits unless limits are given', () => {
         const host = defineHost({
             effects: matching,

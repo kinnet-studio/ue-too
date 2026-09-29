@@ -1,4 +1,9 @@
-import { LoadError, LoadErrorCode, loadError } from '../errors';
+import {
+    LoadError,
+    LoadErrorCode,
+    MAX_REPORTED_ERRORS,
+    loadError,
+} from '../errors';
 import {
     DoneReaction,
     GuardRef,
@@ -32,19 +37,38 @@ export function listBodies(definition: MachineDefinition): BodyEntry[] {
 
 type Fail = (code: LoadErrorCode, path: string, message: string) => void;
 
+/** Pass 2's errors: at most `MAX_REPORTED_ERRORS` kept, the rest counted. */
+export type ReferenceErrors = {
+    readonly errors: LoadError[];
+    readonly omitted: number;
+};
+
 /**
  * Pass 2: every named state, event, field, guard and machine exists; child
  * machines agree with their parents; no machine cycles; the tree fits the
- * nesting and instance limits.
+ * nesting, instance and compiled-size limits.
+ *
+ * Every error this pass reports is distinct, so it keeps only the first
+ * `MAX_REPORTED_ERRORS` and counts the rest: many parents hosting a child
+ * with many mismatched events cannot make it build millions of errors.
  */
 export function checkReferences(
     definition: MachineDefinition,
     limits: Limits
-): LoadError[] {
+): ReferenceErrors {
     const errors: LoadError[] = [];
-    const fail: Fail = (code, path, message) =>
-        errors.push(loadError(code, path, message));
+    let omitted = 0;
+    const fail: Fail = (code, path, message) => {
+        if (errors.length < MAX_REPORTED_ERRORS) {
+            errors.push(loadError(code, path, message));
+        } else {
+            omitted += 1;
+        }
+    };
     const machines = definition.machines ?? {};
+    // Each (parent body, child machine) pair is checked once, however many
+    // of the parent's states host that child.
+    const checkedChildren = new Set<string>();
 
     for (const { key, path, body } of listBodies(definition)) {
         const initialPath = joinPath(path, 'initialState');
@@ -174,20 +198,24 @@ export function checkReferences(
                     `machine ${childKey} has no final state, so onDone can never run`
                 );
             }
-            checkChildEvents(
-                body,
-                child,
-                childKey,
-                joinPath(childPath, 'machine'),
-                fail
-            );
+            const pair = `${path}\u0000${childKey}`;
+            if (!checkedChildren.has(pair)) {
+                checkedChildren.add(pair);
+                checkChildEvents(
+                    body,
+                    child,
+                    childKey,
+                    joinPath(childPath, 'machine'),
+                    fail
+                );
+            }
         }
     }
 
     if (!checkCycles(definition, fail)) {
         checkTreeSize(definition, limits, fail);
     }
-    return errors;
+    return { errors, omitted };
 }
 
 function typeOf(spec: TypeSpec): ReturnType<typeof parseTypeSpec> {
@@ -267,6 +295,7 @@ function childKeys(
 function checkCycles(definition: MachineDefinition, fail: Fail): boolean {
     const machines = definition.machines ?? {};
     const marks = new Map<string, 'visiting' | 'done'>();
+    const reported = new Set<string>();
     let found = false;
     const visit = (key: string): void => {
         const mark = marks.get(key);
@@ -275,11 +304,14 @@ function checkCycles(definition: MachineDefinition, fail: Fail): boolean {
         }
         if (mark === 'visiting') {
             found = true;
-            fail(
-                'machine-cycle',
-                joinPath('machines', key),
-                `machine ${key} contains itself through its children`
-            );
+            if (!reported.has(key)) {
+                reported.add(key);
+                fail(
+                    'machine-cycle',
+                    joinPath('machines', key),
+                    `machine ${key} contains itself through its children`
+                );
+            }
             return;
         }
         marks.set(key, 'visiting');

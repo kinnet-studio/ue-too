@@ -44,6 +44,34 @@ describe('checkDefinition', () => {
         ]);
     });
 
+    it('reports at most 1000 errors, then how many more there were', () => {
+        const doc = vendingDoc();
+        for (let i = 0; i < 1500; i++) {
+            doc.states.IDLE.on[`x${i}`] = {};
+        }
+        const result = check(doc);
+        expect(result.ok).toBe(false);
+        if (result.ok) return;
+        expect(result.errors).toHaveLength(1001);
+        expect(result.errors[999].code).toBe('unknown-event');
+        const last = result.errors[1000];
+        expect(last.code).toBe('limit-exceeded');
+        expect(last.path).toBe('');
+        expect(last.message).toContain('500 more errors');
+    });
+
+    it('caps structural errors too', () => {
+        const doc = vendingDoc();
+        for (let i = 0; i < 1500; i++) {
+            doc[`extra${i}`] = true;
+        }
+        const result = check(doc);
+        expect(result.ok).toBe(false);
+        if (result.ok) return;
+        expect(result.errors).toHaveLength(1001);
+        expect(result.errors[1000].code).toBe('limit-exceeded');
+    });
+
     it('reports several semantic errors at once', () => {
         const doc = vendingDoc();
         doc.initialState = 'NOWHERE';
@@ -127,6 +155,74 @@ describe('references', () => {
             // the child's own roll reaction now multiplies a string
             'type-mismatch',
         ]);
+    });
+
+    it('checks a child against each parent once, however many states host it', () => {
+        const events: Doc = {};
+        for (let i = 0; i < 50; i++) {
+            events[`e${i}`] = {};
+        }
+        const states: Doc = {};
+        for (let i = 0; i < 50; i++) {
+            states[`S${i}`] = { child: { machine: 'kid' } };
+        }
+        const doc = {
+            format: 'being-machine@1',
+            id: 'many',
+            revision: 1,
+            context: {},
+            events: {},
+            machines: {
+                kid: {
+                    context: {},
+                    events,
+                    initialState: 'A',
+                    states: { A: {} },
+                },
+            },
+            initialState: 'S0',
+            states,
+        };
+        const errors = errorsOf(doc);
+        expect(errors).toHaveLength(50);
+        expect(
+            errors.every(
+                error =>
+                    error.code === 'child-event-mismatch' &&
+                    error.path === 'states.S0.child.machine'
+            )
+        ).toBe(true);
+    });
+
+    it('counts every child mismatch past the cap when many parents host it', () => {
+        const events: Doc = {};
+        for (let i = 0; i < 100; i++) {
+            events[`e${i}`] = {};
+        }
+        const host = () => ({
+            context: {},
+            events: {},
+            initialState: 'A',
+            states: { A: { child: { machine: 'kid' } } },
+        });
+        const machines: Doc = {
+            kid: { context: {}, events, initialState: 'A', states: { A: {} } },
+        };
+        for (let i = 0; i < 11; i++) {
+            machines[`P${i}`] = host();
+        }
+        const doc = {
+            format: 'being-machine@1',
+            id: 'many',
+            revision: 1,
+            ...host(),
+            machines,
+        };
+        const result = check(doc);
+        expect(result.ok).toBe(false);
+        if (result.ok) return;
+        expect(result.errors).toHaveLength(1001);
+        expect(result.errors[1000].message).toBe('…and 200 more errors');
     });
 
     it('rejects machine cycles', () => {

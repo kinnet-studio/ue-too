@@ -1,6 +1,7 @@
 import { LoadOptions, LoadResult, ValidationResult } from './api-types';
 import { buildMachineTree } from './compile/build';
 import { copyPlainData } from './copy';
+import { capErrors } from './errors';
 import { Host, checkHostEffects } from './host';
 import { DEFAULT_LIMITS, Limits, resolveLimits } from './limits';
 import { checkDefinition } from './validate';
@@ -31,7 +32,9 @@ export function validateDefinition(
         return checked;
     }
     const hostErrors = checkHostEffects(checked.definition, options.host);
-    return hostErrors.length > 0 ? { ok: false, errors: hostErrors } : checked;
+    return hostErrors.length > 0
+        ? { ok: false, errors: capErrors(hostErrors) }
+        : checked;
 }
 
 /**

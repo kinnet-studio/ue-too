@@ -93,6 +93,26 @@ export function loadError(
     return { code, path, message };
 }
 
+/** Most errors a load, validation or restore reports; the rest are counted. */
+export const MAX_REPORTED_ERRORS = 1000;
+
+/**
+ * The first {@link MAX_REPORTED_ERRORS} errors, then one `limit-exceeded`
+ * error at path `''` that says how many more there were. `omitted` counts
+ * errors a pass found but did not keep.
+ */
+export function capErrors(errors: LoadError[], omitted = 0): LoadError[] {
+    if (errors.length + omitted <= MAX_REPORTED_ERRORS) {
+        return errors;
+    }
+    const kept = errors.slice(0, MAX_REPORTED_ERRORS);
+    const more = errors.length + omitted - kept.length;
+    return [
+        ...kept,
+        loadError('limit-exceeded', '', `…and ${more} more errors`),
+    ];
+}
+
 /** Thrown inside the interpreter; the transaction turns it into a {@link RuntimeError}. */
 export class PortableRuntimeFailure extends Error {
     readonly code: RuntimeErrorCode;

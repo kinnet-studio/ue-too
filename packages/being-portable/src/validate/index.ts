@@ -1,5 +1,5 @@
 import { PlainData } from '../copy';
-import { LoadError } from '../errors';
+import { LoadError, capErrors } from '../errors';
 import { MachineDefinition } from '../format/types';
 import { Limits } from '../limits';
 import { migrateDefinition } from '../migrate';
@@ -25,7 +25,8 @@ function dedupe(errors: LoadError[]): LoadError[] {
 
 /**
  * Runs migration and the four passes on already-copied data. Stops after the
- * structure pass when it finds errors.
+ * structure pass when it finds errors. Reports at most
+ * `MAX_REPORTED_ERRORS` errors plus a count of the rest.
  */
 export function checkDefinition(
     document: PlainData,
@@ -37,12 +38,15 @@ export function checkDefinition(
     }
     const structural = checkStructure(migrated.value, limits);
     if (structural.length > 0) {
-        return { ok: false, errors: structural };
+        return { ok: false, errors: capErrors(structural) };
     }
     const definition = migrated.value as unknown as MachineDefinition;
+    const references = checkReferences(definition, limits);
     const errors = dedupe([
-        ...checkReferences(definition, limits),
+        ...references.errors,
         ...checkTypes(definition, limits),
     ]);
-    return errors.length > 0 ? { ok: false, errors } : { ok: true, definition };
+    return errors.length > 0
+        ? { ok: false, errors: capErrors(errors, references.omitted) }
+        : { ok: true, definition };
 }
