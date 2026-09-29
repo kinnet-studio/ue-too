@@ -482,7 +482,15 @@ class StructureChecker {
         if (kind === 'list') {
             this.keys(expr, path, ['list'], ['of']);
             const listPath = joinPath(path, 'list');
-            this.list(expr.list, listPath)?.forEach((item, index) =>
+            const items = this.list(expr.list, listPath);
+            if (items !== null && items.length > this.limits.maxListLength) {
+                this.fail(
+                    'limit-exceeded',
+                    path,
+                    `a list may have at most ${this.limits.maxListLength} items`
+                );
+            }
+            items?.forEach((item, index) =>
                 this.expr(item, joinPath(listPath, index), depth + 1)
             );
             if (hasOwn(expr, 'of') && !isScalarName(expr.of)) {

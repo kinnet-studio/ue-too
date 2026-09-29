@@ -86,6 +86,16 @@ export function checkReferences(
             );
         }
 
+        for (const [event] of entriesOf(body.outputs)) {
+            if (!hasOwn(body.events, event)) {
+                fail(
+                    'unknown-event',
+                    joinPath(joinPath(path, 'outputs'), event),
+                    `"${event}" has an output but is not declared in events`
+                );
+            }
+        }
+
         const stateRef = (target: string, targetPath: string) => {
             if (!hasOwn(body.states, target)) {
                 fail(

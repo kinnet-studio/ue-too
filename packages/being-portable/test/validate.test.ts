@@ -107,6 +107,17 @@ describe('references', () => {
         ]);
     });
 
+    it('rejects outputs for events the machine does not declare', () => {
+        const doc = gameDoc();
+        doc.outputs = { nope: 'number', ghost: 'string' };
+        doc.machines.turn.outputs = { ghost: 'string' };
+        expect(errorsOf(doc)).toEqual([
+            { code: 'unknown-event', path: 'outputs.nope' },
+            { code: 'unknown-event', path: 'outputs.ghost' },
+            { code: 'unknown-event', path: 'machines.turn.outputs.ghost' },
+        ]);
+    });
+
     it('checks child machines and with fields', () => {
         const doc = gameDoc();
         doc.states.PLAYING.child.with.nope = 1;

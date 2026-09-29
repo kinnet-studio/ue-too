@@ -176,6 +176,22 @@ describe('checkStructure', () => {
         });
     });
 
+    it('caps list literals at maxListLength', () => {
+        const doc = vendingDoc();
+        doc.states.IDLE.on.insertCoin.do = [
+            { set: 'sold', to: { list: ['a', 'b'] } },
+            { set: 'sold', to: { list: ['a', 'b', 'c'] } },
+        ];
+        expect(
+            structureErrors(doc, { ...DEFAULT_LIMITS, maxListLength: 2 })
+        ).toEqual([
+            {
+                code: 'limit-exceeded',
+                path: 'states.IDLE.on.insertCoin.do[1].to',
+            },
+        ]);
+    });
+
     it('checks child and machines', () => {
         const doc = vendingDoc();
         doc.machines = { inner: { states: {} } };
