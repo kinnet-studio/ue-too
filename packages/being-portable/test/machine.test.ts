@@ -5,7 +5,7 @@ import { loadMachine } from '../src/api';
 import { PortableMachine } from '../src/api-types';
 import { uniqueName } from '../src/compile/names';
 import { RuntimeError } from '../src/errors';
-import { Host } from '../src/host';
+import { Host, HostEffect } from '../src/host';
 import { MAX_QUEUED_REPORTS } from '../src/interpret/tx';
 import { Doc, vendingDoc } from './fixtures';
 import { recordingHost } from './recording-host';
@@ -112,6 +112,25 @@ describe('a flat machine', () => {
         expect(() => machine.context.get('missing')).toThrow('missing');
         expect(Object.isFrozen(machine.context.fields())).toBe(true);
         expect(() => machine.setContext(machine.context)).toThrow('setContext');
+    });
+
+    it('keeps the effects it was loaded with', () => {
+        const { host, calls } = recordingHost();
+        const machine = load(vendingDoc(), host);
+        const swapped: string[] = [];
+        const effects = host.effects as Map<string, HostEffect>;
+        effects.set('refund', {
+            ...effects.get('refund')!,
+            run: () => {
+                swapped.push('refund');
+            },
+        });
+        effects.delete('dispense');
+        machine.happens('insertCoin', { amount: 3 });
+        machine.happens('select', { item: 'cola', price: 1 });
+        machine.happens('cancel');
+        expect(swapped).toEqual([]);
+        expect(calls.map(call => call.name)).toEqual(['dispense', 'refund']);
     });
 
     it('does not let the host run context setup', () => {

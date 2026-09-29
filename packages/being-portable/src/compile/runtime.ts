@@ -2,7 +2,7 @@ import { TemplateState } from '@ue-too/being';
 
 import { PortableContext, PortableEvents, PortableOutputs } from '../api-types';
 import { MachineBody, MachineDefinition, Stmt } from '../format/types';
-import { Host, Services } from '../host';
+import { Host, HostEffect, Services } from '../host';
 import { EvalEnv } from '../interpret/expr';
 import { OutputSink, StmtEnv, runStatements } from '../interpret/stmt';
 import { ContextStore } from '../interpret/store';
@@ -31,6 +31,8 @@ export type MachineRuntime = {
     readonly host: Host;
     /** Host services wrapped so any call back into the tree is re-entrant. */
     readonly services: Services;
+    /** The declared effects, taken from the host when the tree was built. */
+    readonly effects: ReadonlyMap<string, HostEffect>;
     readonly store: ContextStore;
     readonly context: PortableContextImpl;
     /** Child machine per state name, for states with a `child`. */
@@ -60,7 +62,7 @@ export function stmtEnv(
 ): StmtEnv {
     return {
         ...evalEnv(runtime, frame),
-        effects: runtime.host.effects,
+        effects: runtime.effects,
         calls: runtime.transaction,
         output,
     };

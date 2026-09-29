@@ -1,5 +1,5 @@
 import { MachineDefinition } from '../format/types';
-import { Host, Services } from '../host';
+import { Host, HostEffect, Services } from '../host';
 import { ContextStore } from '../interpret/store';
 import { Transaction } from '../interpret/tx';
 import { entriesOf, joinPath } from '../util';
@@ -23,6 +23,16 @@ export function buildMachineTree(
         random: () => transaction.hostCode(() => host.services.random()),
         now: () => transaction.hostCode(() => host.services.now()),
     });
+    // The declared effects as the host supplied them when the document was
+    // checked; later changes to `host.effects` cannot swap one in.
+    const effects = new Map<string, HostEffect>();
+    for (const [name] of entriesOf(definition.effects)) {
+        const effect = host.effects.get(name);
+        if (effect !== undefined) {
+            effects.set(name, effect);
+        }
+    }
+    Object.freeze(effects);
 
     const build = (key: string | null): PortableStateMachine => {
         const body = key === null ? definition : definition.machines![key];
@@ -36,6 +46,7 @@ export function buildMachineTree(
             transaction,
             host,
             services,
+            effects,
             store,
             context: new PortableContextImpl(store),
             children: new Map(),
