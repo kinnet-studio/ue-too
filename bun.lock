@@ -147,6 +147,13 @@
         "@ue-too/board": "workspace:*",
       },
     },
+    "packages/being-portable": {
+      "name": "@ue-too/being-portable",
+      "version": "0.18.0",
+      "dependencies": {
+        "@ue-too/being": "workspace:*",
+      },
+    },
     "packages/board": {
       "name": "@ue-too/board",
       "version": "0.18.0",
@@ -1111,6 +1118,8 @@
     "@ue-too/being": ["@ue-too/being@workspace:packages/being"],
 
     "@ue-too/being-devtools": ["@ue-too/being-devtools@workspace:packages/being-devtools"],
+
+    "@ue-too/being-portable": ["@ue-too/being-portable@workspace:packages/being-portable"],
 
     "@ue-too/blast": ["@ue-too/blast@workspace:apps/blast"],
 

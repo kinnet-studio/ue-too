@@ -45,6 +45,7 @@ packages/
     dynamics/       — 2D physics engine
     curve/          — Bezier curves, lines, composite paths
     border/         — Geographic projections
+    being-portable/ — Portable, serializable being machine definitions (JSON; safe to load from strangers)
 
   Integration (depend on mid-level):
     board-react-adapter/
