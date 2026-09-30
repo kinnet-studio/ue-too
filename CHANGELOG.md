@@ -1,3 +1,42 @@
+## 0.19.0 (2026-09-30)
+
+### 🚀 Features
+
+- ⚠️  DelegatingState and state expansion helpers replace the hierarchical POC ([#446](https://github.com/kinnet-studio/ue-too/pull/446))
+- **being-devtools:** attachable debugger panel for being machines ([#439](https://github.com/kinnet-studio/ue-too/pull/439))
+- **being-portable:** portable, serializable being machine definitions ([#451](https://github.com/kinnet-studio/ue-too/pull/451))
+
+### 🩹 Fixes
+
+- camera owns copies of its limit objects ([#449](https://github.com/kinnet-studio/ue-too/pull/449))
+- **being-devtools:** inline × hides the sidebar, and the panel stacks on phones ([#445](https://github.com/kinnet-studio/ue-too/pull/445))
+- **board:** ignore a zero canvas measurement instead of latching it ([#444](https://github.com/kinnet-studio/ue-too/pull/444))
+- **board-pixi-integration:** base teardown reads live parsers and survives a replaced cleanup ([#441](https://github.com/kinnet-studio/ue-too/pull/441))
+
+### ⚠️  Breaking Changes
+
+- DelegatingState and state expansion helpers replace the hierarchical POC  ([#446](https://github.com/kinnet-studio/ue-too/pull/446))
+  CompositeState, HierarchicalStateMachine and the related
+  hierarchical types are no longer exported. Use DelegatingState instead.
+  Co-Authored-By: Claude Fable 5.1 <noreply@anthropic.com>
+  * feat(board): add expandKmtInputStateMachine and expandTouchInputStateMachine
+  Build the stock KMT or touch machine with more events, states, context or
+  outputs without re-listing every built-in state. The factory hands the
+  callback the stock states already typed for the expanded machine plus an
+  extend helper bound to the same generics; untouched stock states keep their
+  behaviour and ignore events they do not know. The generic constraints and a
+  conditional on the callback type reject a non-superset expansion at compile
+  time.
+  Co-Authored-By: Claude Fable 5.1 <noreply@anthropic.com>
+
+### ❤️ Thank You
+
+- Claude Fable 5.1
+- Claude Haiku 4.5
+- Claude Opus 5 (1M context)
+- Claude Opus 5.5 (1M context)
+- vee @niuee
+
 ## 0.18.0 (2026-09-03)
 
 ### 🚀 Features
