@@ -1,3 +1,15 @@
+## 0.19.1 (2026-10-12)
+
+### 🩹 Fixes
+
+- **board-pixi-react-integration:** scrollbar drag direction, Home/End and resize [0.19.x] ([#454](https://github.com/kinnet-studio/ue-too/pull/454))
+
+### ❤️ Thank You
+
+- Claude
+- Claude Opus 5.5
+- vee @niuee
+
 ## 0.19.0 (2026-09-30)
 
 ### 🚀 Features
