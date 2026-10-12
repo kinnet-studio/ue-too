@@ -59,7 +59,7 @@ export function distTagFor(version, latest) {
  * doesn't need one), which npm would send on this read too.
  */
 export async function lookupLatest(name) {
-    const url = `${REGISTRY}/${name.replace('/', '%2F')}`;
+    const url = `${REGISTRY}/${encodeURIComponent(name)}`;
     try {
         const response = await fetch(url, {
             headers: { accept: 'application/vnd.npm.install-v1+json' },
