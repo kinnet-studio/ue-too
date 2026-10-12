@@ -149,6 +149,7 @@ All `@ue-too/*` packages are versioned in lockstep and published with [`nx relea
 
 - **Minor/major releases** are cut from `main`. Each one auto-creates a `version/X.Y.Z` branch for that release line.
 - **Patch releases** are cut from a `version/*` branch: fixes are cherry-picked from `main` onto the branch, and the workflow is triggered there — with only `fix:` commits on the branch, inference produces a patch. Patch tags and bump commits stay on the release branch, so `main` releases always diff from the last minor/major tag.
+- A patch on an older release line (e.g. 0.18.4 after 0.19.0 is out) is published under the npm dist-tag `latest-<major>.<minor>` (`npm i @ue-too/board@latest-0.18`), and its GitHub release isn't marked Latest; `latest` stays on the newest line.
 
 Preview the next version locally with `bun run bump-version:dry-run`.
 
