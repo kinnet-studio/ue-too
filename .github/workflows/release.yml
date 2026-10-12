@@ -81,6 +81,18 @@ jobs:
               # now 12.x, which requires Node >= 22.22 and fails on the pinned
               # 22.19.0 with EBADENGINE. Pin the 11.x line.
               run: npm install -g npm@11
+            - name: Choose npm dist-tag
+              id: dist-tag
+              if: ${{ github.event.inputs.dry-run != 'true' }}
+              # A patch on an older release line (e.g. 0.18.4 after 0.19.0) is
+              # published under latest-<major>.<minor> instead of latest; the
+              # publish script decides that per package. Decided here too, before
+              # publishing moves latest, so the GitHub release isn't marked Latest.
+              run: |
+                  VERSION=$(node -p "require('./packages/math/package.json').version")
+                  TAG=$(node scripts/dist-tag.mjs @ue-too/math "$VERSION")
+                  echo "Releasing $VERSION under npm dist-tag: ${TAG:-unknown (npm default)}"
+                  echo "tag=$TAG" >> $GITHUB_OUTPUT
             - name: Publish packages
               if: ${{ github.event.inputs.dry-run != 'true' }}
               run: npm run publish-packages -- ${{ github.event.inputs.dry-run == 'true' && '--dry-run' || '' }}
@@ -168,12 +180,19 @@ jobs:
               env:
                   GH_TOKEN: ${{ secrets.PAT }}
                   tag: v${{ steps.get-version.outputs.version }}
+                  DIST_TAG: ${{ steps.dist-tag.outputs.tag }}
               run: |
+                  # Only the newest release line is "Latest", matching npm's latest.
+                  LATEST_FLAG=""
+                  if [[ -n "$DIST_TAG" && "$DIST_TAG" != "latest" ]]; then
+                      LATEST_FLAG="--latest=false"
+                  fi
                   gh release create "$tag" \
                       --repo="$GITHUB_REPOSITORY" \
                       --title="${GITHUB_REPOSITORY#*/} ${{ steps.get-version.outputs.version }}" \
                       --target="${{ steps.get-release-branch.outputs.release-branch }}" \
-                      --generate-notes
+                      --generate-notes \
+                      $LATEST_FLAG
                       
                   # Upload all prepared files from the temporary directory
                   # cd "$RELEASE_FILES_DIR"
