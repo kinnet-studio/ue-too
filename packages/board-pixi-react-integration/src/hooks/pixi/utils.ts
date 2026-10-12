@@ -69,6 +69,9 @@ export const useViewportScrollBar = () => {
     const { result } = usePixiCanvas();
 
     const cameraState = useAllBoardCameraState();
+    // A resize changes the camera's viewport size without a camera event; the
+    // camera's own resize listener (registered at init) runs before this one.
+    const canvasSize = useCanvasSize();
 
     const res = useMemo(() => {
         if (
@@ -84,7 +87,7 @@ export const useViewportScrollBar = () => {
             };
         }
         return getScrollBar(result.components.camera);
-    }, [result, cameraState]);
+    }, [result, cameraState, canvasSize]);
 
     return res;
 };
