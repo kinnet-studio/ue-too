@@ -1,12 +1,11 @@
-import {
-    convertFromWindow2Canvas,
-    translationHeightOf,
-    translationWidthOf,
-} from '@ue-too/board';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import { usePixiCanvas } from '../../contexts/pixi';
 import { useViewportScrollBar } from '../../hooks/pixi/utils';
+import {
+    scrollBarDragToWorldDelta,
+    scrollBarKeyToWorldDelta,
+} from './scrollbar-pan';
 
 export const ScrollBarDisplay = () => {
     const scrollBar = useViewportScrollBar();
@@ -121,28 +120,16 @@ export const ScrollBarDisplay = () => {
                 initialHorizontalPositionRef.current = 0;
                 return;
             }
-            const delta = {
-                x: event.clientX - initialHorizontalPositionRef.current,
-                y: 0,
-            };
+            const delta = event.clientX - initialHorizontalPositionRef.current;
             initialHorizontalPositionRef.current = event.clientX;
-            const viewportDelta = convertFromWindow2Canvas(
-                delta,
-                result.components.canvasProxy
+
+            result.components.cameraRig.panByWorld(
+                scrollBarDragToWorldDelta(
+                    result.components.camera,
+                    'horizontal',
+                    delta
+                )
             );
-
-            const percentage =
-                viewportDelta.x / result.components.camera.viewPortWidth;
-
-            const worldDelta = {
-                x:
-                    percentage *
-                    (translationWidthOf(result.components.camera.boundaries) ??
-                        0),
-                y: 0,
-            };
-
-            result.components.cameraRig.panByWorld(worldDelta);
         },
         [result]
     );
@@ -179,65 +166,15 @@ export const ScrollBarDisplay = () => {
                 return;
             }
 
-            const boundaries = result.components.camera.boundaries;
-            if (!boundaries) {
+            const worldDelta = scrollBarKeyToWorldDelta(
+                result.components.camera,
+                'horizontal',
+                event.key
+            );
+            if (worldDelta == null) {
                 return;
             }
-
-            const width = translationWidthOf(boundaries);
-            if (width == null) {
-                return;
-            }
-
-            const viewportWidth = result.components.camera.viewPortWidth;
-            const scrollStep = viewportWidth * 0.05; // 10% of viewport width
-            const scrollPercentage = scrollStep / viewportWidth;
-            const worldStep = scrollPercentage * width;
-
-            let worldDelta = { x: 0, y: 0 };
-
-            switch (event.key) {
-                case 'ArrowLeft':
-                    event.preventDefault();
-                    worldDelta = { x: -worldStep, y: 0 };
-                    break;
-                case 'ArrowRight':
-                    event.preventDefault();
-                    worldDelta = { x: worldStep, y: 0 };
-                    break;
-                case 'Home':
-                    event.preventDefault();
-                    // Move to leftmost position
-                    if (boundaries.min?.x != null) {
-                        const currentLeft = boundaries.min.x;
-                        const viewportLeft =
-                            result.components.camera.convertFromViewPort2WorldSpace(
-                                {
-                                    x: -viewportWidth / 2,
-                                    y: 0,
-                                }
-                            ).x;
-                        worldDelta = { x: currentLeft - viewportLeft, y: 0 };
-                    }
-                    break;
-                case 'End':
-                    event.preventDefault();
-                    // Move to rightmost position
-                    if (boundaries.max?.x != null) {
-                        const currentRight = boundaries.max.x;
-                        const viewportRight =
-                            result.components.camera.convertFromViewPort2WorldSpace(
-                                {
-                                    x: viewportWidth / 2,
-                                    y: 0,
-                                }
-                            ).x;
-                        worldDelta = { x: currentRight - viewportRight, y: 0 };
-                    }
-                    break;
-                default:
-                    return;
-            }
+            event.preventDefault();
 
             result.components.cameraRig.panByWorld(worldDelta);
         },
@@ -266,28 +203,16 @@ export const ScrollBarDisplay = () => {
                 initialVerticalPositionRef.current = 0;
                 return;
             }
-            const delta = {
-                x: 0,
-                y: event.clientY - initialVerticalPositionRef.current,
-            };
+            const delta = event.clientY - initialVerticalPositionRef.current;
             initialVerticalPositionRef.current = event.clientY;
-            const viewportDelta = convertFromWindow2Canvas(
-                delta,
-                result.components.canvasProxy
+
+            result.components.cameraRig.panByWorld(
+                scrollBarDragToWorldDelta(
+                    result.components.camera,
+                    'vertical',
+                    delta
+                )
             );
-
-            const percentage =
-                viewportDelta.y / result.components.camera.viewPortHeight;
-
-            const worldDelta = {
-                x: 0,
-                y:
-                    percentage *
-                    (translationHeightOf(result.components.camera.boundaries) ??
-                        0),
-            };
-
-            result.components.cameraRig.panByWorld(worldDelta);
         },
         [result]
     );
@@ -322,68 +247,15 @@ export const ScrollBarDisplay = () => {
                 return;
             }
 
-            const boundaries = result.components.camera.boundaries;
-            if (!boundaries) {
+            const worldDelta = scrollBarKeyToWorldDelta(
+                result.components.camera,
+                'vertical',
+                event.key
+            );
+            if (worldDelta == null) {
                 return;
             }
-
-            const height = translationHeightOf(boundaries);
-            if (height == null) {
-                return;
-            }
-
-            const viewportHeight = result.components.camera.viewPortHeight;
-            const scrollStep = viewportHeight * 0.05; // 10% of viewport height
-            const scrollPercentage = scrollStep / viewportHeight;
-            const worldStep = scrollPercentage * height;
-
-            let worldDelta = { x: 0, y: 0 };
-
-            switch (event.key) {
-                case 'ArrowUp':
-                    event.preventDefault();
-                    worldDelta = { x: 0, y: -worldStep };
-                    break;
-                case 'ArrowDown':
-                    event.preventDefault();
-                    worldDelta = { x: 0, y: worldStep };
-                    break;
-                case 'Home':
-                    event.preventDefault();
-                    // Move to topmost position
-                    if (boundaries.max?.y != null) {
-                        const currentTop = boundaries.max.y;
-                        const viewportTop =
-                            result.components.camera.convertFromViewPort2WorldSpace(
-                                {
-                                    x: 0,
-                                    y: -viewportHeight / 2,
-                                }
-                            ).y;
-                        worldDelta = { x: 0, y: currentTop - viewportTop };
-                    }
-                    break;
-                case 'End':
-                    event.preventDefault();
-                    // Move to bottommost position
-                    if (boundaries.min?.y != null) {
-                        const currentBottom = boundaries.min.y;
-                        const viewportBottom =
-                            result.components.camera.convertFromViewPort2WorldSpace(
-                                {
-                                    x: 0,
-                                    y: viewportHeight / 2,
-                                }
-                            ).y;
-                        worldDelta = {
-                            x: 0,
-                            y: currentBottom - viewportBottom,
-                        };
-                    }
-                    break;
-                default:
-                    return;
-            }
+            event.preventDefault();
 
             result.components.cameraRig.panByWorld(worldDelta);
         },
