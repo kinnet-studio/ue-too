@@ -210,6 +210,25 @@ export type KmtIdleStatePossibleTargetStates =
     | 'DISABLED';
 
 /**
+ * Largest zoom change a single wheel event may make: ×1.25 in, ÷1.25 out.
+ *
+ * @remarks
+ * The camera rig applies a zoom delta additively (`zoom + delta·zoom`), and a
+ * standard Windows wheel notch is `deltaY = 100`, so a delta linear in
+ * `deltaY` can take a single zoom-out notch to a zoom ≤ 0. {@link KmtIdleState}
+ * instead treats the scaled wheel delta as a log step (`delta = exp(step) − 1`),
+ * which keeps the zoom positive and in/out symmetric, and caps the step at
+ * this factor so one event is bounded whatever `deltaY` the platform reports.
+ * Small trackpad/pinch deltas are effectively unchanged.
+ *
+ * @category Input State Machine - KMT
+ */
+export const MAX_WHEEL_ZOOM_FACTOR = 1.25;
+
+const WHEEL_ZOOM_SENSITIVITY = 0.025;
+const MAX_WHEEL_ZOOM_LOG_STEP = Math.log(MAX_WHEEL_ZOOM_FACTOR);
+
+/**
  * IDLE state - default state waiting for user input.
  *
  * @remarks
@@ -275,11 +294,14 @@ export class KmtIdleState extends TemplateState<
         context: KmtInputContext,
         payload: ScrollWithCtrlEventPayload
     ): KmtOutputEvent => {
-        let scrollSensitivity = 0.005;
-        if (Math.abs(payload.deltaY) > 100) {
-            scrollSensitivity = 0.0005;
-        }
-        const zoomAmount = payload.deltaY * scrollSensitivity;
+        // Multiplicative and capped; see MAX_WHEEL_ZOOM_FACTOR.
+        const zoomStep = Math.max(
+            -MAX_WHEEL_ZOOM_LOG_STEP,
+            Math.min(
+                MAX_WHEEL_ZOOM_LOG_STEP,
+                -payload.deltaY * WHEEL_ZOOM_SENSITIVITY
+            )
+        );
         const cursorPosition = { x: payload.x, y: payload.y };
         const anchorPointInViewPort =
             convertFromWindow2ViewPortWithCanvasOperator(
@@ -290,7 +312,7 @@ export class KmtIdleState extends TemplateState<
             );
         return {
             type: 'zoom',
-            delta: -(zoomAmount * 5),
+            delta: Math.expm1(zoomStep),
             anchorPointInViewPort,
         };
     };
