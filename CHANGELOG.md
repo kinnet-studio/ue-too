@@ -1,3 +1,14 @@
+## 0.18.5 (2026-10-14)
+
+### 🩹 Fixes
+
+- **board:** one Windows wheel notch no longer zooms out to the floor ([#458](https://github.com/kinnet-studio/ue-too/pull/458), [#459](https://github.com/kinnet-studio/ue-too/pull/459))
+
+### ❤️ Thank You
+
+- Claude
+- vee @niuee
+
 ## 0.18.4 (2026-10-12)
 
 ### 🩹 Fixes
