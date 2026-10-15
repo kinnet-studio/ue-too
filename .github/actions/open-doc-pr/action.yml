@@ -38,10 +38,6 @@ inputs:
         description: 'Whether to build documentation'
         required: false
         default: 'false'
-    docs-destination:
-        description: 'Destination path in target repo for documentation files (relative to repo root)'
-        required: false
-        default: 'docs'
 
 runs:
     using: 'composite'
@@ -74,13 +70,14 @@ runs:
                 git checkout -b ${{ inputs.pr-branch }}
               fi
 
-              # Copy built documentation from source repo to target repo
-              if [ -d "$GITHUB_WORKSPACE/source-docs" ]; then
-                # Create destination directory if it doesn't exist
-                mkdir -p "./${{ inputs.docs-destination }}"
-                # Copy all docs directories to the target repo
-                cp -r "$GITHUB_WORKSPACE/source-docs"/* "./${{ inputs.docs-destination }}/"
+              # Import the built docs into this release line's folder: docs/ for
+              # the latest line, versions/v<major.minor>/ for an older one (a new
+              # minor archives the previous latest). See the docs repo's README.
+              if [ ! -f scripts/import-docs.ts ]; then
+                echo "::error::${{ inputs.target-repo }} has no scripts/import-docs.ts"
+                exit 1
               fi
+              bun run scripts/import-docs.ts "${{ inputs.doc-version }}" "$GITHUB_WORKSPACE/source-docs"
 
               echo "BRANCH_NAME=${{ inputs.pr-branch }}" >> $GITHUB_ENV
 

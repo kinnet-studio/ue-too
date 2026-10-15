@@ -100,6 +100,7 @@ Releases are cut with `nx release` (NOT changesets) through the manually trigger
 - **Patch releases** run from a `version/*` branch: cherry-pick the `fix:` commits from `main` onto it, then trigger the workflow there — inference sees only fixes and produces a patch. Release-branch bump commits and patch tags stay on the branch; never back-merge them to `main`.
 - Because patch tags are unreachable from `main`, a main release always diffs from the last minor/major tag — patches on release lines don't affect it.
 - A patch on an older line (lower than the registry's `latest`) is published under the dist-tag `latest-<major>.<minor>` and its GitHub release isn't marked Latest (`scripts/dist-tag.mjs`, used by `publish-package.mjs` and the workflow); `latest` stays on the newest line.
+- Every release, patch included, opens a PR on [ue-too-documentation](https://github.com/kinnet-studio/ue-too-documentation) that imports the TypeDoc output into that release line's docs. The latest `major.minor` line is served at the site root and older lines under `/v<major.minor>/`; a new minor archives the previous line.
 - Dry-run locally with `bun run bump-version:dry-run` (add `--specifier <bump>` to preview an override).
 
 ### Commit messages are the version signal
