@@ -52,6 +52,8 @@
 
 A live website containing the examples is available [here](https://kinnet-studio.github.io/ue-too/).
 
+You can also pan, zoom and edit live examples right in the docs: [Live examples](https://kinnet-studio.github.io/ue-too-documentation/board/live-examples).
+
 This monorepo includes comprehensive examples demonstrating various packages and integrations:
 
 ### Core Examples
