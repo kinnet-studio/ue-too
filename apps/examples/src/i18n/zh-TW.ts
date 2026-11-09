@@ -41,7 +41,7 @@ const zhTW = {
         '與 Fabric.js 整合。展示 uē-tôo 與 Fabric.js 的互動式畫布物件整合。',
     'card.camera-animation.title': '鏡頭動畫',
     'card.camera-animation.desc':
-        '平滑的鏡頭飛行。點擊任意位置飛過去：遠距離時會先拉遠再拉近，按鈕可讓鏡頭飛回起點。',
+        '沿著縮放平移路徑的平滑鏡頭飛行。點擊附近任一處飛過去；或走遠後按「回到起點」，看鏡頭拉遠、滑回起點再拉近。',
     'card.svg.title': 'SVG 範例',
     'card.svg.desc': 'SVG 範例。展示如何在 uē-tôo 中使用 SVG。',
     'card.state-machine.title': '狀態機視覺化',

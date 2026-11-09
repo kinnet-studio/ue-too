@@ -41,7 +41,7 @@ const en = {
         'Integration with Fabric.js. Demonstrates uē-tôo integration with Fabric.js for interactive canvas objects.',
     'card.camera-animation.title': 'Camera Animation',
     'card.camera-animation.desc':
-        'Smooth camera flights. Click to fly anywhere: long trips zoom out and back in, and a button flies the camera back to the start.',
+        'Smooth camera flights along a zoom-and-pan path. Click to fly somewhere nearby, or wander off and press Back to start to watch the camera zoom out, glide home, and zoom back in.',
     'card.svg.title': 'SVG Example',
     'card.svg.desc': 'SVG examples. Demonstrates how to work with SVG in uē-tôo.',
     'card.state-machine.title': 'State Machine Visualizer',
