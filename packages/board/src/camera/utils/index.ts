@@ -26,3 +26,4 @@ export * from './matrix';
 export * from './position';
 export * from './rotation';
 export * from './zoom';
+export * from './zoom-pan-path';
