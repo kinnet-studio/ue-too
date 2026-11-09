@@ -1,3 +1,20 @@
+## 0.20.0 (2026-11-09)
+
+### 🚀 Features
+
+- **board:** smooth zoom-and-pan camera flights with createZoomPanPath ([#465](https://github.com/kinnet-studio/ue-too/pull/465))
+
+### 🩹 Fixes
+
+- **board:** one Windows wheel notch no longer zooms out to the floor ([#458](https://github.com/kinnet-studio/ue-too/pull/458))
+- **board-pixi-react-integration:** scrollbar drag direction, Home/End and resize ([#452](https://github.com/kinnet-studio/ue-too/pull/452))
+
+### ❤️ Thank You
+
+- Claude
+- Claude Opus 5.5
+- vee @niuee
+
 ## 0.19.0 (2026-09-30)
 
 ### 🚀 Features
