@@ -41,7 +41,7 @@ const zhTW = {
         '與 Fabric.js 整合。展示 uē-tôo 與 Fabric.js 的互動式畫布物件整合。',
     'card.camera-animation.title': '鏡頭動畫',
     'card.camera-animation.desc':
-        '鏡頭動畫範例。展示如何建立平滑的鏡頭轉場與動畫。',
+        '沿著縮放平移路徑的平滑鏡頭飛行。點擊附近任一處飛過去；或走遠後按「回到起點」，看鏡頭拉遠、滑回起點再拉近。',
     'card.svg.title': 'SVG 範例',
     'card.svg.desc': 'SVG 範例。展示如何在 uē-tôo 中使用 SVG。',
     'card.state-machine.title': '狀態機視覺化',
@@ -119,9 +119,13 @@ const zhTW = {
     // Camera Animation example
     'camera-animation.title': '鏡頭動畫',
     'camera-animation.desc':
-        '使用 <code>@ue-too/animate</code> 展示平滑的鏡頭動畫轉場。點擊畫布任意位置，鏡頭將在 1 秒內平滑移動至該世界座標。',
+        '使用 <code>@ue-too/board</code> 的 <code>createZoomPanPath</code>，搭配 <code>@ue-too/animate</code> 驅動平滑的鏡頭飛行。距離較遠時，鏡頭會先拉遠、滑過去，再拉近。',
     'camera-animation.click':
-        '<kbd>點擊</kbd> 任意位置將鏡頭動畫移至該處',
+        '<kbd>點擊</kbd> 任意位置，鏡頭將飛到該處',
+    'camera-animation.back':
+        '<strong>回到起點</strong> 讓鏡頭飛回一開始的位置（橘色十字標記處）',
+    'camera-animation.interrupt': '飛行途中平移或縮放即可接手鏡頭',
+    'camera-animation.back-button': '回到起點',
     'camera-animation.ruler': '尺規覆蓋層顯示目前的視窗邊界',
 
     // Image example
