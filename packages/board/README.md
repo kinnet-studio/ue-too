@@ -62,7 +62,7 @@ This monorepo includes comprehensive examples demonstrating various packages and
 - [**Attach / Detach Example**](https://kinnet-studio.github.io/ue-too/attach-detach/) - Dynamically attach and detach a canvas from the board
 - [**Navigation Example**](https://kinnet-studio.github.io/ue-too/navigation/) - Keyboard-driven camera panning via `panByViewPort()`
 - [**Ruler Example**](https://kinnet-studio.github.io/ue-too/ruler/) - Measurement ruler overlay that updates with pan and zoom
-- [**Camera Animation**](https://kinnet-studio.github.io/ue-too/camera-animation/) - Smooth animated camera transitions on click
+- [**Camera Animation**](https://kinnet-studio.github.io/ue-too/camera-animation/) - Click to fly the camera anywhere, or back to the start, along a smooth zoom-and-pan path
 - [**Image Example**](https://kinnet-studio.github.io/ue-too/image-example/) - Upload and display an image on the pannable canvas
 - [**SVG Example**](https://kinnet-studio.github.io/ue-too/svg/) - Board camera system applied to SVG elements
 
@@ -95,6 +95,7 @@ import { Board } from '@ue-too/board';
 - Comprehensive input support: touch, trackpad (macOS), keyboard, and mouse, with customizable behavior
 - Framework-agnostic: Works with HTML and JavaScript, and can be integrated with frontend frameworks/libraries
 - Multi-framework compatibility: Works with pixi.js, fabric.js, Konva, and vanilla HTML canvas
+- Smooth camera flights: `createZoomPanPath()` gives the path between two views that zooms out, glides across, and zooms back in (Van Wijk & Nuij), ready to drive with any animation loop
 
 ## Quick Start (HTML Canvas)
 
