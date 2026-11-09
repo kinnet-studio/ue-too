@@ -41,7 +41,7 @@ const en = {
         'Integration with Fabric.js. Demonstrates uē-tôo integration with Fabric.js for interactive canvas objects.',
     'card.camera-animation.title': 'Camera Animation',
     'card.camera-animation.desc':
-        'Camera animation examples. Shows how to create smooth camera transitions and animations.',
+        'Smooth camera flights. Click to fly anywhere: long trips zoom out and back in, and a button flies the camera back to the start.',
     'card.svg.title': 'SVG Example',
     'card.svg.desc': 'SVG examples. Demonstrates how to work with SVG in uē-tôo.',
     'card.state-machine.title': 'State Machine Visualizer',
@@ -119,9 +119,14 @@ const en = {
     // Camera Animation example
     'camera-animation.title': 'Camera Animation',
     'camera-animation.desc':
-        'Demonstrates smooth animated camera transitions using <code>@ue-too/animate</code>. Click anywhere on the canvas and the camera will smoothly pan to that world position over 1 second.',
+        'Smooth camera flights with <code>createZoomPanPath</code> from <code>@ue-too/board</code>, driven by <code>@ue-too/animate</code>. On a long trip the camera zooms out, glides across, and zooms back in.',
     'camera-animation.click':
-        '<kbd>Click</kbd> anywhere to animate the camera to that position',
+        '<kbd>Click</kbd> anywhere to fly the camera there',
+    'camera-animation.back':
+        '<strong>Back to start</strong> flies the camera back to where it began, marked with an orange cross',
+    'camera-animation.interrupt':
+        'Pan or zoom during a flight to take over the camera',
+    'camera-animation.back-button': 'Back to start',
     'camera-animation.ruler': 'A ruler overlay shows the current viewport boundaries',
 
     // Image example
