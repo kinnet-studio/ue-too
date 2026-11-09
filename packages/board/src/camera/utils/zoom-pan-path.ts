@@ -37,8 +37,9 @@ export type ZoomPanPath = {
      * The camera view at progress `t`.
      *
      * @param t - Progress from 0 (start view) to 1 (target view). Values
-     * outside that range are clamped. Equal steps of `t` look like equal
-     * amounts of motion, so layer any easing on top of `t`.
+     * outside that range are clamped, and `NaN` gives the start view. Equal
+     * steps of `t` look like equal amounts of motion, so layer any easing on
+     * top of `t`.
      * @returns A new view object; `at(0)` is exactly the start view and
      * `at(1)` exactly the target view.
      */
@@ -61,6 +62,14 @@ function assertPositiveFinite(value: number, name: string): void {
     }
 }
 
+function assertFinitePoint(point: Point, name: string): void {
+    if (!Number.isFinite(point.x) || !Number.isFinite(point.y)) {
+        throw new RangeError(
+            `${name} must have finite coordinates, got (${point.x}, ${point.y})`
+        );
+    }
+}
+
 /**
  * Creates a smooth zoom-and-pan camera path between two views.
  *
@@ -72,7 +81,8 @@ function assertPositiveFinite(value: number, name: string): void {
  * @param options - See {@link ZoomPanPathOptions}
  * @returns The path; sample it with {@link ZoomPanPath.at}
  * @throws RangeError if `viewPortWidth`, either zoom level or `rho` is not a
- * positive finite number
+ * positive finite number, or either position has a coordinate that is not
+ * finite
  *
  * @remarks
  * Moving the camera and changing its zoom at the same rate looks wrong: the
@@ -84,34 +94,57 @@ function assertPositiveFinite(value: number, name: string): void {
  * part of the path.
  *
  * The function only computes views; drive it with your own frame loop and
- * apply each view to the camera. With {@link CameraMuxWithAnimationAndLock},
- * start the flight with `initatePanTransition()` and
- * `initateZoomTransition()`, then on each frame report the view through
+ * apply each view to the camera. With {@link CameraMuxWithAnimationAndLock}
+ * (the {@link Board} default), start the flight with `initatePanTransition()`
+ * and `initateZoomTransition()`, then on each frame report the view through
  * `notifyZoomInputAnimation()` and `notifyPanToAnimationInput()` and apply it
- * with the camera rig. The camera's zoom and position limits still apply: a
+ * with the camera rig. When the user pans or zooms, the mux's pan or zoom
+ * state machine leaves `TRANSITION`: stop the flight then, so it doesn't fight
+ * them. If the camera is locked on an object (`LOCKED_ON_OBJECT`), send
+ * `mux.panStateMachine.happens('unlock')` first; `initatePanTransition()` does
+ * nothing in that state. The camera's zoom and position limits still apply: a
  * path that zooms out past the minimum zoom is clamped there.
  *
  * @example
+ * Fly the camera to a point, handing it back if the user takes over
  * ```typescript
+ * const board = new Board(canvas);
+ * const mux = board.cameraMux as CameraMuxWithAnimationAndLock;
+ * const rig = board.getCameraRig();
  * const camera = board.camera;
+ *
  * const path = createZoomPanPath(
  *     { position: camera.position, zoomLevel: camera.zoomLevel },
  *     { position: { x: 5000, y: 0 }, zoomLevel: 2 },
  *     camera.viewPortWidth
  * );
+ * mux.initatePanTransition();
+ * mux.initateZoomTransition();
  *
  * const duration = 1000;
  * const startTime = performance.now();
  * function frame(now: number) {
+ *     // The user panned or zoomed: let them have the camera
+ *     if (
+ *         mux.panStateMachine.currentState !== 'TRANSITION' ||
+ *         mux.zoomStateMachine.currentState !== 'TRANSITION'
+ *     ) {
+ *         return;
+ *     }
  *     const t = Math.min(1, (now - startTime) / duration);
- *     const eased = (1 - Math.cos(Math.PI * t)) / 2;
- *     const view = path.at(eased);
+ *     const view = path.at((1 - Math.cos(Math.PI * t)) / 2);
+ *     mux.notifyZoomInputAnimation(view.zoomLevel);
  *     rig.zoomTo(view.zoomLevel);
- *     rig.panToWorld(view.position);
+ *     if (mux.notifyPanToAnimationInput(view.position).allowPassThrough) {
+ *         rig.panToWorld(view.position);
+ *     }
  *     if (t < 1) requestAnimationFrame(frame);
  * }
  * requestAnimationFrame(frame);
  * ```
+ *
+ * See the camera-animation example in the ue-too repository for the same
+ * flight driven by `@ue-too/animate`.
  *
  * @category Camera
  */
@@ -126,6 +159,8 @@ export function createZoomPanPath(
     assertPositiveFinite(from.zoomLevel, 'from.zoomLevel');
     assertPositiveFinite(to.zoomLevel, 'to.zoomLevel');
     assertPositiveFinite(rho, 'rho');
+    assertFinitePoint(from.position, 'from.position');
+    assertFinitePoint(to.position, 'to.position');
 
     const start: CameraView = {
         position: { x: from.position.x, y: from.position.y },

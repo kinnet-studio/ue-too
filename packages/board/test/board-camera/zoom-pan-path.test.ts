@@ -210,6 +210,27 @@ describe('createZoomPanPath', () => {
         }
     });
 
+    it('rejects a position that is not finite', () => {
+        for (const bad of [NaN, Infinity, -Infinity]) {
+            const badX: CameraView = {
+                position: { x: bad, y: 0 },
+                zoomLevel: 1,
+            };
+            const badY: CameraView = {
+                position: { x: 0, y: bad },
+                zoomLevel: 1,
+            };
+            for (const view of [badX, badY]) {
+                expect(() => createZoomPanPath(view, to, WIDTH)).toThrow(
+                    RangeError
+                );
+                expect(() => createZoomPanPath(from, view, WIDTH)).toThrow(
+                    RangeError
+                );
+            }
+        }
+    });
+
     it('rejects a rho that is not a positive finite number', () => {
         for (const rho of [0, -1, NaN]) {
             expect(() => createZoomPanPath(from, to, WIDTH, { rho })).toThrow(
