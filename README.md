@@ -1,5 +1,8 @@
 <h1 align="center">
-    uē-tôo
+    <picture>
+        <source media="(prefers-color-scheme: dark)" srcset="brand/logo-lockup-dark.svg">
+        <img src="brand/logo-lockup.svg" alt="uē-tôo" width="360">
+    </picture>
 </h1>
 <p align="center">
     A toolkit for interactive HTML canvas applications
