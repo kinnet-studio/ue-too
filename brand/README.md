@@ -11,7 +11,7 @@ A camera viewfinder (the board's view) with a handwritten "ue" whose line keeps 
 | `favicon.svg`                             | Bold "ue" for 32 px and below; switches to the dark-mode green by itself             |
 | `favicon.ico`, `favicon-{16,32,48}.png`   | Favicon fallbacks for browsers without SVG favicons                                  |
 | `apple-touch-icon.png`                    | 180 px home-screen icon                                                              |
-| `logo-mark-512.png`, `logo-mark-256.png`  | The mark as images, e.g. avatars                                                     |
+| `logo-mark-512.png`, `logo-mark-256.png`  | The mark as transparent images, on light backgrounds only (its frame is dark)        |
 | `social-preview.png`                      | 1280×640 link preview; set it by hand in the GitHub repo's Settings → Social preview |
 
 ## Rules
