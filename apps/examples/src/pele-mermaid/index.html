@@ -1,0 +1,189 @@
+<!doctype html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8" />
+        <link rel="icon" type="image/png" sizes="32x32" href="/favicon.png" />
+        <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title data-i18n-title="pele-mermaid.title">Mermaid with Pele</title>
+        <style>
+            html,
+            body {
+                height: 100%;
+            }
+            body {
+                margin: 0;
+                overflow: hidden;
+                font-family:
+                    -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto,
+                    sans-serif;
+                background-color: #f5f5f5;
+                color: #333;
+            }
+            .layout {
+                display: flex;
+                height: 100%;
+            }
+            .editor {
+                position: relative;
+                box-sizing: border-box;
+                width: 360px;
+                flex: none;
+                display: flex;
+                flex-direction: column;
+                gap: 10px;
+                padding: 16px;
+                background: white;
+                border-right: 1px solid #ddd;
+                overflow: auto;
+            }
+            .editor h2 {
+                margin: 0;
+                font-size: 16px;
+            }
+            .editor p {
+                margin: 0;
+                font-size: 13px;
+                color: #555;
+                line-height: 1.4;
+            }
+            .editor ul {
+                margin: 0;
+                padding-left: 20px;
+                font-size: 13px;
+                color: #555;
+                line-height: 1.6;
+            }
+            .editor kbd {
+                background: #eee;
+                border: 1px solid #ccc;
+                border-radius: 3px;
+                padding: 1px 5px;
+                font-size: 12px;
+                font-family: monospace;
+            }
+            .lang-bar {
+                position: absolute;
+                top: 12px;
+                right: 16px;
+            }
+            .editor label {
+                font-size: 13px;
+                font-weight: 600;
+            }
+            #source {
+                flex: 1;
+                min-height: 200px;
+                resize: none;
+                padding: 8px;
+                border: 1px solid #ccc;
+                border-radius: 4px;
+                font-family:
+                    ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+                font-size: 12px;
+                line-height: 1.5;
+                tab-size: 4;
+            }
+            #error {
+                margin: 0;
+                font-family:
+                    ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+                font-size: 12px;
+                white-space: pre-wrap;
+                color: #b42318;
+            }
+            #error:empty {
+                display: none;
+            }
+            #fit {
+                align-self: flex-start;
+                padding: 8px 16px;
+                border: 1px solid #ccc;
+                border-radius: 4px;
+                background: white;
+                cursor: pointer;
+                font-size: 13px;
+            }
+            #fit:hover {
+                background: #f0f0f0;
+            }
+            #stage {
+                display: block;
+                flex: 1;
+                min-width: 0;
+                height: 100%;
+                user-select: none;
+                -webkit-user-select: none;
+                touch-action: none;
+                background: #ffffff;
+                --pele-bg: #ffffff;
+                --pele-fg: #1f1f1f;
+                --pele-muted: #6e6e6e;
+                --pele-line: #1f1f1f;
+                --pele-surface: #f3f3f3;
+                --pele-surface-alt: #e6e6e6;
+                --pele-border: #8a8a8a;
+                --pele-accent: #5b7bd5;
+            }
+            @media (max-width: 720px) {
+                .layout {
+                    flex-direction: column;
+                }
+                .editor {
+                    width: auto;
+                    height: 45%;
+                    border-right: none;
+                    border-bottom: 1px solid #ddd;
+                }
+                #stage {
+                    height: auto;
+                    min-height: 0;
+                }
+            }
+        </style>
+    </head>
+    <body>
+        <div class="layout">
+            <aside class="editor">
+                <div class="lang-bar" id="lang-switcher-container"></div>
+                <h2 data-i18n="pele-mermaid.title">Mermaid with Pele</h2>
+                <p data-i18n="pele-mermaid.desc">
+                    Pele renders Mermaid to SVG; the board camera transforms an
+                    SVG group around it, so the diagram stays sharp at any zoom.
+                </p>
+                <ul>
+                    <li data-i18n-html="controls.scroll-and-pan">
+                        <kbd>Scroll</kbd> to zoom,
+                        <kbd>Middle Mouse Drag</kbd> or
+                        <kbd>Space + Left Drag</kbd> to pan
+                    </li>
+                    <li data-i18n-html="controls.trackpad">
+                        <strong>Trackpad:</strong> <kbd>Two-finger drag</kbd> to
+                        pan, <kbd>Pinch</kbd> to zoom
+                    </li>
+                    <li data-i18n-html="controls.touch">
+                        <strong>Touch:</strong> <kbd>Two-finger drag</kbd> to
+                        pan, <kbd>Pinch</kbd> to zoom
+                    </li>
+                </ul>
+                <label for="source" data-i18n="pele-mermaid.editor-label"
+                    >Mermaid source</label
+                >
+                <textarea
+                    id="source"
+                    spellcheck="false"
+                    autocomplete="off"
+                ></textarea>
+                <pre id="error" role="status" aria-live="polite"></pre>
+                <button id="fit" type="button" data-i18n="pele-mermaid.fit">
+                    Fit
+                </button>
+            </aside>
+            <svg id="stage" xmlns="http://www.w3.org/2000/svg">
+                <g id="camera"></g>
+            </svg>
+        </div>
+        <script type="module" src="/i18n/setup.ts"></script>
+        <script type="module" src="./main.ts"></script>
+    </body>
+</html>

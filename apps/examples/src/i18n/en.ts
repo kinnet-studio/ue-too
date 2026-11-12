@@ -15,6 +15,7 @@ const en = {
     'nav.camera-animation': 'Camera Animation',
     'nav.image': 'Image Example',
     'nav.svg': 'SVG Example',
+    'nav.pele-mermaid': 'Mermaid (Pele)',
     'nav.state-machine': 'State Machine Visualizer',
 
     // Card titles & descriptions
@@ -44,6 +45,9 @@ const en = {
         'Smooth camera flights along a zoom-and-pan path. Click to fly somewhere nearby, or wander off and press Back to start to watch the camera zoom out, glide home, and zoom back in.',
     'card.svg.title': 'SVG Example',
     'card.svg.desc': 'SVG examples. Demonstrates how to work with SVG in uē-tôo.',
+    'card.pele-mermaid.title': 'Mermaid (Pele)',
+    'card.pele-mermaid.desc':
+        'Editable Mermaid diagrams rendered by Pele, panned and zoomed with the uē-tôo camera.',
     'card.state-machine.title': 'State Machine Visualizer',
     'card.state-machine.desc':
         'Interactive statechart visualizer and simulator for @ue-too/being machines, rendered with @ue-too/board.',
@@ -147,6 +151,13 @@ const en = {
     'svg.rotation': 'Rotation',
     'svg.zoom': 'Zoom',
     'svg.apply': 'Apply',
+
+    // Pele Mermaid example
+    'pele-mermaid.title': 'Mermaid with Pele',
+    'pele-mermaid.desc':
+        'Pele renders Mermaid to SVG; the board camera transforms an SVG group around it, so the diagram stays sharp at any zoom.',
+    'pele-mermaid.editor-label': 'Mermaid source',
+    'pele-mermaid.fit': 'Fit',
 
     // Pixi example
     'pixi.title': 'PixiJS Integration',

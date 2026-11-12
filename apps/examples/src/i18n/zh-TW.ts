@@ -15,6 +15,7 @@ const zhTW = {
     'nav.camera-animation': '鏡頭動畫',
     'nav.image': '圖片範例',
     'nav.svg': 'SVG 範例',
+    'nav.pele-mermaid': 'Mermaid（Pele）',
     'nav.state-machine': '狀態機視覺化',
 
     // Card titles & descriptions
@@ -44,6 +45,9 @@ const zhTW = {
         '沿著縮放平移路徑的平滑鏡頭飛行。點擊附近任一處飛過去；或走遠後按「回到起點」，看鏡頭拉遠、滑回起點再拉近。',
     'card.svg.title': 'SVG 範例',
     'card.svg.desc': 'SVG 範例。展示如何在 uē-tôo 中使用 SVG。',
+    'card.pele-mermaid.title': 'Mermaid（Pele）',
+    'card.pele-mermaid.desc':
+        '可即時編輯的 Mermaid 圖表，由 Pele 繪製，並以 uē-tôo 鏡頭平移與縮放。',
     'card.state-machine.title': '狀態機視覺化',
     'card.state-machine.desc':
         '互動式狀態機視覺化與模擬器，使用 @ue-too/board 繪製 @ue-too/being 狀態機。',
@@ -146,6 +150,13 @@ const zhTW = {
     'svg.rotation': '旋轉',
     'svg.zoom': '縮放',
     'svg.apply': '套用',
+
+    // Pele Mermaid example
+    'pele-mermaid.title': '以 Pele 繪製 Mermaid',
+    'pele-mermaid.desc':
+        'Pele 將 Mermaid 轉成 SVG；board 鏡頭變換包住它的 SVG 群組，因此圖表在任何縮放等級下都保持清晰。',
+    'pele-mermaid.editor-label': 'Mermaid 原始碼',
+    'pele-mermaid.fit': '完整顯示',
 
     // Pixi example
     'pixi.title': 'PixiJS 整合',
