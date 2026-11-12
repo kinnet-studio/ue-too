@@ -19,6 +19,10 @@ import { SAMPLE_DIAGRAM } from './sample';
 const stage = document.getElementById('stage') as unknown as SVGSVGElement;
 const cameraGroup = document.getElementById('camera') as unknown as SVGGElement;
 const source = document.getElementById('source') as HTMLTextAreaElement;
+const errorLine = document.getElementById('error') as HTMLPreElement;
+
+// Wait this long after the last keystroke before re-rendering
+const RENDER_DEBOUNCE_MS = 250;
 
 // Pele measures labels with this stack; draw them with the same one
 stage.style.setProperty('--pele-font', DIAGRAM_FONT);
@@ -63,6 +67,22 @@ function showDiagram(result: Extract<DiagramResult, { ok: true }>): void {
     cameraGroup.replaceChildren(result.element);
     current = { width: result.width, height: result.height };
 }
+
+// Re-render as the user types. A failed render keeps the last good diagram
+// on screen; nothing here touches the camera
+let pendingRender: ReturnType<typeof setTimeout> | undefined;
+source.addEventListener('input', () => {
+    clearTimeout(pendingRender);
+    pendingRender = setTimeout(() => {
+        const result = renderDiagram(source.value);
+        if (result.ok) {
+            showDiagram(result);
+            errorLine.textContent = '';
+        } else {
+            errorLine.textContent = result.message;
+        }
+    }, RENDER_DEBOUNCE_MS);
+});
 
 function step() {
     const { a, b, c, d, e, f } = camera.getTransform(1, true);
