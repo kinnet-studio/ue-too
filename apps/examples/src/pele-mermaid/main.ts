@@ -1,4 +1,5 @@
 import {
+    CameraView,
     DefaultBoardCamera,
     InputOrchestrator,
     ObservableInputTracker,
@@ -6,10 +7,12 @@ import {
     TouchInputTracker,
     VanillaKMTEventParser,
     VanillaTouchEventParser,
+    ZoomPanPath,
     createCameraMuxWithAnimationAndLock,
     createDefaultCameraRig,
     createKmtInputStateMachine,
     createTouchInputStateMachine,
+    createZoomPanPath,
 } from '@ue-too/board';
 
 import { DIAGRAM_FONT, DiagramResult, renderDiagram } from './diagram';
@@ -20,9 +23,11 @@ const stage = document.getElementById('stage') as unknown as SVGSVGElement;
 const cameraGroup = document.getElementById('camera') as unknown as SVGGElement;
 const source = document.getElementById('source') as HTMLTextAreaElement;
 const errorLine = document.getElementById('error') as HTMLPreElement;
+const fitButton = document.getElementById('fit') as HTMLButtonElement;
 
 // Wait this long after the last keystroke before re-rendering
 const RENDER_DEBOUNCE_MS = 250;
+const FLIGHT_MS = 1000;
 
 // Pele measures labels with this stack; draw them with the same one
 stage.style.setProperty('--pele-font', DIAGRAM_FONT);
@@ -84,7 +89,63 @@ source.addEventListener('input', () => {
     }, RENDER_DEBOUNCE_MS);
 });
 
-function step() {
+// The camera flight in progress, if any; `start` is set on its first frame
+let flight: { path: ZoomPanPath; start: number | undefined } | undefined;
+
+function currentView(): CameraView {
+    return {
+        position: { ...camera.position },
+        zoomLevel: camera.zoomLevel,
+    };
+}
+
+// Fly the camera to `target` along a zoom-and-pan path. Pan or zoom input
+// moves the mux out of its transition states, which ends the flight
+function flyTo(target: CameraView): void {
+    flight = {
+        path: createZoomPanPath(currentView(), target, camera.viewPortWidth),
+        start: undefined,
+    };
+    cameraMux.initatePanTransition();
+    cameraMux.initateZoomTransition();
+}
+
+function advanceFlight(now: number): void {
+    if (flight === undefined) {
+        return;
+    }
+    if (
+        cameraMux.panStateMachine.currentState !== 'TRANSITION' ||
+        cameraMux.zoomStateMachine.currentState !== 'TRANSITION'
+    ) {
+        // The user took over the camera
+        flight = undefined;
+        return;
+    }
+    flight.start ??= now;
+    const t = Math.min(1, (now - flight.start) / FLIGHT_MS);
+    const view = flight.path.at((1 - Math.cos(Math.PI * t)) / 2);
+    cameraMux.notifyZoomInputAnimation(view.zoomLevel);
+    cameraRig.zoomTo(view.zoomLevel);
+    if (cameraMux.notifyPanToAnimationInput(view.position).allowPassThrough) {
+        cameraRig.panToWorld(view.position);
+    }
+    if (t === 1) {
+        flight = undefined;
+    }
+}
+
+fitButton.addEventListener('click', () => {
+    flyTo(
+        fitView(current, {
+            width: camera.viewPortWidth,
+            height: camera.viewPortHeight,
+        })
+    );
+});
+
+function step(now: number) {
+    advanceFlight(now);
     const { a, b, c, d, e, f } = camera.getTransform(1, true);
     cameraGroup.setAttribute(
         'transform',
