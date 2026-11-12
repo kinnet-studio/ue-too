@@ -41,6 +41,10 @@ export default defineConfig({
                 ),
                 physics: resolve(__dirname, 'src/physics/index.html'),
                 svg: resolve(__dirname, 'src/svg/index.html'),
+                'pele-mermaid': resolve(
+                    __dirname,
+                    'src/pele-mermaid/index.html'
+                ),
                 'state-machine-visualizer': resolve(
                     __dirname,
                     'src/state-machine-visualizer/index.html'

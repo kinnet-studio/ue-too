@@ -29,7 +29,8 @@
         "fabric": "7.4.0",
         "konva": "10.0.12",
         "pixi.js": "8.20.1",
-        "dompurify": "^3.3.3"
+        "dompurify": "^3.3.3",
+        "pele": "1.13.0"
     },
     "scripts": {
         "dev": "vite",
