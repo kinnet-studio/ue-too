@@ -76,9 +76,10 @@ The user picked 1.
     `createZoomPanPath`. Pele's own zoom has no flight like this, so the
     button shows off something only ue-too gives you.
   - Zoom limits stay sensible.
-- **Starting diagram.** The board package's own input-to-camera data-flow
-  flowchart (from `packages/board/README.md`), so the demo shows ue-too
-  explaining itself.
+- **Starting diagram.** The gitGraph example from the Pele playground
+  (https://pele.run/playground), credited on the page with a link to it.
+  (Changed after review from the board package's own data-flow flowchart,
+  at the user's request.)
 - **Dependency.** Add `pele` pinned at `1.13.0` to `apps/examples` only.
 - **Registration.**
   - Add the page to the Vite `input` list.
