@@ -8,7 +8,9 @@ export default defineConfig({
     root: resolve(__dirname, './src'),
     publicDir: resolve(__dirname, 'public'),
     build: {
-        outDir: resolve(join(__dirname, '../../'), 'dist'),
+        // Its own folder: the apps build in parallel, and emptying the shared
+        // dist/ races with the other apps writing into it
+        outDir: resolve(join(__dirname, '../../'), 'dist/apps/blast'),
         emptyOutDir: true,
         sourcemap: true,
         assetsDir: 'assets',
