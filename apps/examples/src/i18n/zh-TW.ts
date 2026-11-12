@@ -157,6 +157,8 @@ const zhTW = {
         'Pele 將 Mermaid 轉成 SVG；board 鏡頭變換包住它的 SVG 群組，因此圖表在任何縮放等級下都保持清晰。',
     'pele-mermaid.editor-label': 'Mermaid 原始碼',
     'pele-mermaid.fit': '完整顯示',
+    'pele-mermaid.credit': '起始圖表：gitGraph 範例取自',
+    'pele-mermaid.credit-link': 'Pele 官方 Playground',
     'pele-mermaid.controls-mouse':
         '<kbd>Ctrl + 滾輪</kbd> 縮放，<kbd>中鍵拖曳</kbd> 或 <kbd>空白鍵 + 左鍵拖曳</kbd> 平移',
 

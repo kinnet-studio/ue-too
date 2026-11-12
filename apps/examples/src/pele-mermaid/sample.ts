@@ -1,59 +1,52 @@
 /**
- * The starting diagram: the board package's own input-to-camera data flow,
- * copied from `packages/board/README.md`.
+ * The starting diagram: the gitGraph example from the Pele playground,
+ * https://pele.run/playground (credited on the page).
  */
-export const SAMPLE_DIAGRAM = `flowchart TB
-    subgraph Input ["Input Layer"]
-        CE["🖼️ Canvas Element"]
-        CDP["📐 Canvas Proxy"]
-        CEP["🎯 Event Parsers<br/><small>KMT + Touch</small>"]
-    end
-
-    subgraph Interpretation ["Input Interpretation"]
-        ISM["🔄 Input State Machine<br/><small>interprets user intent</small>"]
-        IT["📋 Input Tracker<br/><small>cursor position, canvas info</small>"]
-    end
-
-    subgraph Orchestration ["Input Orchestration"]
-        IO["🎛️ Input Orchestrator<br/><small>central routing hub</small>"]
-    end
-
-    subgraph Publishing ["Raw Input Publishing"]
-        RIP["📡 Raw Input Publisher"]
-        RIO["👂 User Callbacks<br/><small>onInput handlers</small>"]
-    end
-
-    subgraph CameraControl ["Camera Control"]
-        CM["🚦 Camera Mux<br/><small>permission control</small>"]
-        OCIS["🎬 Other Input Sources<br/><small>animations, programmatic</small>"]
-        CR["🎮 Camera Rig<br/><small>restrictions & clamping</small>"]
-    end
-
-    subgraph Camera ["Camera"]
-        OC["📷 Observable Camera"]
-        ACMO["👂 Camera Observers<br/><small>on handlers</small>"]
-    end
-
-    %% Canvas setup
-    CDP -.->|"tracks dimensions"| CE
-    CE -->|"DOM events"| CEP
-    CDP -->|"canvas info"| IT
-
-    %% Input interpretation
-    CEP -->|"state machine events"| ISM
-    ISM <-->|"read/update context"| IT
-    ISM -->|"pan, zoom, rotate"| IO
-
-    %% Orchestrator routing (parallel paths)
-    IO -->|"always publish"| RIP
-    RIP --> RIO
-    IO -->|"ask permission"| CM
-
-    %% Camera Mux
-    OCIS -->|"request input"| CM
-    CM -->|"allowPassThrough?"| IO
-
-    %% Camera execution
-    IO -->|"if allowed"| CR
-    CR --> OC
-    OC --> ACMO`;
+export const SAMPLE_DIAGRAM = `---
+config:
+  logLevel: 'debug'
+  theme: 'neutral'
+---
+      gitGraph
+        commit
+        branch hotfix
+        checkout hotfix
+        commit
+        branch develop
+        checkout develop
+        commit id:"ash" tag:"abc"
+        branch featureB
+        checkout featureB
+        commit type:HIGHLIGHT
+        checkout main
+        checkout hotfix
+        commit type:NORMAL
+        checkout develop
+        commit type:REVERSE
+        checkout featureB
+        commit
+        checkout main
+        merge hotfix
+        checkout featureB
+        commit
+        checkout develop
+        branch featureA
+        commit
+        checkout develop
+        merge hotfix
+        checkout featureA
+        commit
+        checkout featureB
+        commit
+        checkout develop
+        merge featureA
+        branch release
+        checkout release
+        commit
+        checkout main
+        commit
+        checkout release
+        merge main
+        checkout develop
+        merge release
+`;

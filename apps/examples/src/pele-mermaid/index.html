@@ -84,6 +84,11 @@
                 line-height: 1.5;
                 tab-size: 4;
             }
+            .editor .credit {
+                margin: 0;
+                font-size: 12px;
+                color: #666;
+            }
             #error {
                 margin: 0;
                 font-family:
@@ -169,6 +174,18 @@
                 <label for="source" data-i18n="pele-mermaid.editor-label"
                     >Mermaid source</label
                 >
+                <p class="credit">
+                    <span data-i18n="pele-mermaid.credit"
+                        >Starting diagram: the gitGraph example from</span
+                    >
+                    <a
+                        href="https://pele.run/playground#source=---%0Aconfig%3A%0A++logLevel%3A+%27debug%27%0A++theme%3A+%27neutral%27%0A---%0A++++++gitGraph%0A++++++++commit%0A++++++++branch+hotfix%0A++++++++checkout+hotfix%0A++++++++commit%0A++++++++branch+develop%0A++++++++checkout+develop%0A++++++++commit+id%3A%22ash%22+tag%3A%22abc%22%0A++++++++branch+featureB%0A++++++++checkout+featureB%0A++++++++commit+type%3AHIGHLIGHT%0A++++++++checkout+main%0A++++++++checkout+hotfix%0A++++++++commit+type%3ANORMAL%0A++++++++checkout+develop%0A++++++++commit+type%3AREVERSE%0A++++++++checkout+featureB%0A++++++++commit%0A++++++++checkout+main%0A++++++++merge+hotfix%0A++++++++checkout+featureB%0A++++++++commit%0A++++++++checkout+develop%0A++++++++branch+featureA%0A++++++++commit%0A++++++++checkout+develop%0A++++++++merge+hotfix%0A++++++++checkout+featureA%0A++++++++commit%0A++++++++checkout+featureB%0A++++++++commit%0A++++++++checkout+develop%0A++++++++merge+featureA%0A++++++++branch+release%0A++++++++checkout+release%0A++++++++commit%0A++++++++checkout+main%0A++++++++commit%0A++++++++checkout+release%0A++++++++merge+main%0A++++++++checkout+develop%0A++++++++merge+release%0A"
+                        target="_blank"
+                        rel="noopener"
+                        data-i18n="pele-mermaid.credit-link"
+                        >the Pele playground</a
+                    >
+                </p>
                 <textarea
                     id="source"
                     spellcheck="false"
