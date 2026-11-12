@@ -6,7 +6,6 @@ import {
     SvgProxy,
     TouchInputTracker,
     VanillaKMTEventParser,
-    VanillaTouchEventParser,
     ZoomPanPath,
     createCameraMuxWithAnimationAndLock,
     createDefaultCameraRig,
@@ -18,6 +17,7 @@ import {
 import { DIAGRAM_FONT, DiagramResult, renderDiagram } from './diagram';
 import { MAX_ZOOM, MIN_ZOOM, fitView } from './fit';
 import { SAMPLE_DIAGRAM } from './sample';
+import { StageTouchEventParser } from './stage-touch-parser';
 
 const stage = document.getElementById('stage') as unknown as SVGSVGElement;
 const cameraGroup = document.getElementById('camera') as unknown as SVGGElement;
@@ -58,12 +58,100 @@ const kmtParser = new VanillaKMTEventParser(
     stage
 );
 kmtParser.setUp();
-const touchParser = new VanillaTouchEventParser(
+const touchParser = new StageTouchEventParser(
     createTouchInputStateMachine(new TouchInputTracker(proxy)),
     orchestrator,
     stage
 );
 touchParser.setUp();
+
+// The board only reads keys aimed at <body>. If the editor (or any other
+// control) has focus and the user points at the diagram and presses Space,
+// they mean "pan", not "type a space": hand the key to the board. Requiring
+// the pointer to have moved since the last key leaves typing alone when the
+// mouse is merely parked over the diagram.
+let pointerOverStage = false;
+let pointerMovedSinceKey = false;
+stage.addEventListener('pointerenter', () => {
+    pointerOverStage = true;
+});
+stage.addEventListener('pointerleave', () => {
+    pointerOverStage = false;
+});
+window.addEventListener('pointermove', () => {
+    pointerMovedSinceKey = true;
+});
+window.addEventListener(
+    'keydown',
+    e => {
+        const focused = document.activeElement;
+        const handOff =
+            e.key === ' ' &&
+            pointerOverStage &&
+            pointerMovedSinceKey &&
+            focused instanceof HTMLElement &&
+            focused !== document.body;
+        pointerMovedSinceKey = false;
+        if (!handOff) {
+            return;
+        }
+        e.preventDefault();
+        e.stopImmediatePropagation();
+        focused.blur();
+        document.body.dispatchEvent(
+            new KeyboardEvent('keydown', {
+                key: ' ',
+                code: 'Space',
+                bubbles: true,
+            })
+        );
+    },
+    { capture: true }
+);
+
+// Panning drags a linked node along under the cursor, so the press and the
+// release land on the same link and the browser would follow it. Swallow
+// the click (and middle-button auxclick) that ends a drag.
+const DRAG_SLOP_PX = 4;
+let pressedAt: { x: number; y: number } | undefined;
+let dragged = false;
+stage.addEventListener(
+    'pointerdown',
+    e => {
+        pressedAt = { x: e.clientX, y: e.clientY };
+        dragged = false;
+    },
+    { capture: true }
+);
+window.addEventListener('pointermove', e => {
+    if (
+        pressedAt !== undefined &&
+        Math.hypot(e.clientX - pressedAt.x, e.clientY - pressedAt.y) >
+            DRAG_SLOP_PX
+    ) {
+        dragged = true;
+    }
+});
+function endPress(): void {
+    pressedAt = undefined;
+    // The click that ends this press is dispatched in the same task; clear
+    // the flag after it so later clicks (e.g. Enter on a link) still work
+    if (dragged) {
+        setTimeout(() => {
+            dragged = false;
+        }, 0);
+    }
+}
+window.addEventListener('pointerup', endPress, { capture: true });
+window.addEventListener('pointercancel', endPress, { capture: true });
+function swallowClickAfterDrag(e: MouseEvent): void {
+    if (dragged) {
+        e.preventDefault();
+        e.stopPropagation();
+    }
+}
+stage.addEventListener('click', swallowClickAfterDrag, { capture: true });
+stage.addEventListener('auxclick', swallowClickAfterDrag, { capture: true });
 
 // Size of the diagram on screen now; its top-left corner is world (0, 0)
 let current = { width: 0, height: 0 };

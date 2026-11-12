@@ -158,6 +158,8 @@ const en = {
         'Pele renders Mermaid to SVG; the board camera transforms an SVG group around it, so the diagram stays sharp at any zoom.',
     'pele-mermaid.editor-label': 'Mermaid source',
     'pele-mermaid.fit': 'Fit',
+    'pele-mermaid.controls-mouse':
+        '<kbd>Ctrl + Scroll</kbd> to zoom, <kbd>Middle Mouse Drag</kbd> or <kbd>Space + Left Drag</kbd> to pan',
 
     // Pixi example
     'pixi.title': 'PixiJS Integration',
