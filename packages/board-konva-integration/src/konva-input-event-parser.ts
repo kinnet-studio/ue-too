@@ -121,6 +121,9 @@ export class KonvaInputParser {
 
     scrollHandler(eventObject: KonvaEventObject<WheelEvent, Stage>) {
         const e = eventObject.evt;
+        // The wheel drives the camera: don't also scroll the page, and don't
+        // let a pinch (Ctrl + wheel) zoom the whole browser page.
+        e.preventDefault();
         if (e.ctrlKey) {
             this.processEvent('scrollWithCtrl', {
                 x: e.clientX,
