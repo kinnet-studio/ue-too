@@ -4,8 +4,7 @@ const en = {
     'index.subtitle': 'Interactive examples and demos',
     'index.description': 'Explore different features and integrations below.',
 
-    // Input device picker (shown next to the language picker)
-    'input-mode.label': 'Input device',
+    // Input device switch (shown next to the language picker)
     'input-mode.kmt': 'Keyboard + Mouse',
     'input-mode.trackpad': 'Trackpad',
 
@@ -167,8 +166,6 @@ const en = {
         '<strong>Touch:</strong> <kbd>One-finger drag</kbd> to pan, <kbd>Pinch</kbd> to zoom',
     'pele-mermaid.credit': 'Starting diagram: the gitGraph example from',
     'pele-mermaid.credit-link': 'the Pele playground',
-    'pele-mermaid.controls-mouse':
-        '<kbd>Ctrl + Scroll</kbd> to zoom, <kbd>Middle Mouse Drag</kbd> or <kbd>Space + Left Drag</kbd> to pan',
 
     // Pixi example
     'pixi.title': 'PixiJS Integration',
