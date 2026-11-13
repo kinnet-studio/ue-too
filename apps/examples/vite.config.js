@@ -2,7 +2,7 @@ import { join, resolve } from 'path';
 import { defineConfig } from 'vite';
 
 export default defineConfig({
-    base: '/ue-too/',
+    base: '/',
     root: resolve(__dirname, './src'),
     build: {
         outDir: resolve(join(__dirname, '../../'), 'dist'),
