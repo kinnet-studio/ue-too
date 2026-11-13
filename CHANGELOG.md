@@ -1,3 +1,14 @@
+## 0.20.1 (2026-11-13)
+
+### 🩹 Fixes
+
+- **board:** flip y on the first two-finger touch move ([#472](https://github.com/kinnet-studio/ue-too/pull/472))
+
+### ❤️ Thank You
+
+- Claude
+- vee @niuee
+
 ## 0.20.0 (2026-11-09)
 
 ### 🚀 Features
