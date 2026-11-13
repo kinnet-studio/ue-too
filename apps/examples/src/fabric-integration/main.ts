@@ -43,8 +43,8 @@ const camera = new DefaultBoardCamera({
     zoomLevel: 2,
 });
 
-// 800 × 600, or narrower on a phone
-fitToPage(800, 600, size => {
+// 800 × 600, or smaller to fit a phone or a short window
+fitToPage(canvas, 800, 600, size => {
     fabricCanvas.setDimensions(size);
     camera.viewPortWidth = size.width;
     camera.viewPortHeight = size.height;

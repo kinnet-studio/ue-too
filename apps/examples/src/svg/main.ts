@@ -18,8 +18,8 @@ const svg = document.querySelector('#graph') as SVGSVGElement;
 
 const camera = new DefaultBoardCamera();
 
-// 800 × 600, or narrower on a phone; one SVG unit stays one CSS pixel
-fitToPage(800, 600, ({ width, height }) => {
+// 800 × 600, or smaller to fit a phone or a short window; one SVG unit stays one CSS pixel
+fitToPage(svg, 800, 600, ({ width, height }) => {
     svg.setAttribute('width', width.toString());
     svg.setAttribute('height', height.toString());
     svg.setAttribute('viewBox', `0 0 ${width} ${height}`);

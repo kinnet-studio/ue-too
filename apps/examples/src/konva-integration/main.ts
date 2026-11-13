@@ -41,8 +41,8 @@ const stage = new Konva.Stage({
     container: 'graph', // id of container <div>
 });
 
-// 800 × 600, or narrower on a phone
-fitToPage(800, 600, size => {
+// 800 × 600, or smaller to fit a phone or a short window
+fitToPage(canvas, 800, 600, size => {
     stage.size(size);
     camera.viewPortWidth = size.width;
     camera.viewPortHeight = size.height;
