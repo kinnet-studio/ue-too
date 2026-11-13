@@ -1,0 +1,75 @@
+/*
+ * Theme shared by every examples page, matching the docs site
+ * (https://ue-too.dev/) so the two read as one site.
+ *
+ * The tokens mirror the docs' VitePress variables of the same name without
+ * the `vp-` prefix (`--c-brand-1` is `--vp-c-brand-1`, and so on): the brand
+ * greens come from the docs theme's custom.css (ue-too-documentation,
+ * .vitepress/theme/custom.css) and the rest from VitePress's default theme.
+ * When the docs palette changes, change it here too.
+ */
+:root {
+    /* Brand: 1 for text and links, 2 for hover, 3 for solid backgrounds */
+    --c-brand-1: #5d8c3e;
+    --c-brand-2: #6b9f48;
+    --c-brand-3: #7ab252;
+    --c-brand-soft: rgba(93, 140, 62, 0.14);
+
+    --c-bg: #ffffff;
+    --c-bg-alt: #f6f6f7;
+    --c-bg-soft: #f6f6f7;
+
+    --c-default-1: #dddde3;
+    --c-default-2: #e4e4e9;
+    --c-default-3: #ebebef;
+
+    /* Border for interactive things (buttons, inputs), divider for the rest */
+    --c-border: #c2c2c4;
+    --c-divider: #e2e2e3;
+
+    --c-text-1: #3c3c43;
+    --c-text-2: #67676c;
+    --c-text-3: #929295;
+
+    --c-danger-1: #b8272c;
+
+    /* Buttons, as the docs' brand buttons */
+    --button-brand-text: #ffffff;
+    --button-brand-bg: var(--c-brand-3);
+    --button-brand-hover-bg: var(--c-brand-2);
+    --button-brand-active-bg: var(--c-brand-1);
+
+    --font-family-base:
+        'Inter', ui-sans-serif, system-ui, sans-serif, 'Apple Color Emoji',
+        'Segoe UI Emoji', 'Segoe UI Symbol', 'Noto Color Emoji';
+    --font-family-mono:
+        ui-monospace, 'Menlo', 'Monaco', 'Consolas', 'Liberation Mono',
+        'Courier New', monospace;
+}
+
+/*
+ * The defaults below are wrapped in :where() so any page's own rule wins: the
+ * build moves this file after the pages' <style> blocks, while the dev server
+ * leaves it before them.
+ */
+:where(body) {
+    font-family: var(--font-family-base);
+    color: var(--c-text-1);
+    background-color: var(--c-bg-alt);
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+}
+
+:where(a) {
+    color: var(--c-brand-1);
+}
+
+:where(a:hover) {
+    color: var(--c-brand-2);
+}
+
+/* Form controls don't inherit the page font on their own */
+:where(button, input, select, textarea) {
+    font-family: inherit;
+    color: inherit;
+}
