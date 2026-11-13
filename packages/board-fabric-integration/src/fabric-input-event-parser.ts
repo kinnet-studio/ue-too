@@ -184,9 +184,28 @@ export class FabricInputEventParser {
         }
     }
 
+    /** The element the pointer is over when it is over the canvas: an
+     *  interactive Fabric canvas stacks two `<canvas>` layers in a wrapper. */
+    private get pointerTarget(): Element {
+        const canvas = this._fabricCanvas;
+        return 'wrapperEl' in canvas
+            ? (canvas.wrapperEl as Element)
+            : canvas.getElement();
+    }
+
     keydownHandler(event: KeyboardEvent) {
         if (this._disabled) {
             return;
+        }
+        // Space aimed at the page with the pointer over the canvas starts
+        // Space + drag panning: keep the page from scrolling, on every key
+        // repeat too. Elsewhere, or typed into a field, Space is left alone.
+        if (
+            event.key === ' ' &&
+            event.target === document.body &&
+            this.pointerTarget.matches(':hover')
+        ) {
+            event.preventDefault();
         }
         if (this._keyfirstPressed.has(event.key)) {
             return;
