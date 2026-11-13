@@ -10,7 +10,7 @@ import {
     createCameraMuxWithAnimationAndLock,
     createDefaultCameraRig,
     createKmtInputStateMachine,
-    createTouchInputStateMachine,
+    createOneFingerPanTouchInputStateMachine,
     createZoomPanPath,
 } from '@ue-too/board';
 
@@ -59,7 +59,8 @@ const kmtParser = new VanillaKMTEventParser(
 );
 kmtParser.setUp();
 const touchParser = new StageTouchEventParser(
-    createTouchInputStateMachine(new TouchInputTracker(proxy)),
+    // One finger pans; two fingers pinch-zoom while their midpoint pans
+    createOneFingerPanTouchInputStateMachine(new TouchInputTracker(proxy)),
     orchestrator,
     stage
 );
