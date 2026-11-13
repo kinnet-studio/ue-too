@@ -6,6 +6,7 @@ import {
     TouchInputStateMachine,
 } from '../../input-interpretation/input-state-machine/touch-input-state-machine';
 import type { InputOrchestrator } from '../input-orchestrator';
+import type { StateMachine } from './vanilla-kmt-event-parser';
 
 /**
  * Interface for touch event parsers.
@@ -38,6 +39,12 @@ export interface TouchEventParser {
      * an external implementation is more likely to need adjustment to
      * satisfy this member's shape. Intended for tooling/introspection —
      * dispatch through the parser, not through this reference.
+     *
+     * {@link VanillaTouchEventParser} can drive any machine that takes
+     * {@link TouchEventMapping} events, such as the one from
+     * {@link createOneFingerPanTouchInputStateMachine}. It still reports that
+     * machine through this member's stock type, so keep your own reference
+     * when you need its real type.
      */
     readonly stateMachine?: TouchInputStateMachine;
 }
@@ -74,6 +81,13 @@ export interface TouchEventParser {
  * The parser prevents default touch behavior to avoid browser scroll/zoom
  * interfering with canvas gestures.
  *
+ * **State Machine**:
+ * Any machine that takes {@link TouchEventMapping} events works: the default
+ * from {@link createTouchInputStateMachine}, the one-finger-pan one from
+ * {@link createOneFingerPanTouchInputStateMachine}, or an expanded machine.
+ * The {@link stateMachine} getter keeps its stock type for compatibility, so
+ * hold on to your own reference to a non-stock machine.
+ *
  * @category Raw Input Parser
  *
  * @example
@@ -99,13 +113,21 @@ export class VanillaTouchEventParser implements TouchEventParser {
     private _zoomDisabled: boolean = false;
     private _rotateDisabled: boolean = false;
 
-    private _stateMachine: TouchInputStateMachine;
+    private _stateMachine: StateMachine;
     private _orchestrator: InputOrchestrator;
 
     private _abortController: AbortController;
 
+    /**
+     * @param touchInputStateMachine - Any machine that takes
+     * {@link TouchEventMapping} events, e.g. from
+     * {@link createTouchInputStateMachine} or
+     * {@link createOneFingerPanTouchInputStateMachine}
+     * @param orchestrator - Receives the machine's outputs
+     * @param canvas - The element to listen on; can be attached later
+     */
     constructor(
-        touchInputStateMachine: TouchInputStateMachine,
+        touchInputStateMachine: StateMachine,
         orchestrator: InputOrchestrator,
         canvas?: HTMLCanvasElement | SVGSVGElement
     ) {
@@ -122,8 +144,17 @@ export class VanillaTouchEventParser implements TouchEventParser {
         return this._orchestrator;
     }
 
+    /**
+     * The machine this parser dispatches into.
+     *
+     * @remarks
+     * Typed as the stock {@link TouchInputStateMachine} for compatibility,
+     * even when the parser was built with a different machine (such as one
+     * from {@link createOneFingerPanTouchInputStateMachine}). Keep your own
+     * reference when you need that machine's real type.
+     */
     get stateMachine(): TouchInputStateMachine {
-        return this._stateMachine;
+        return this._stateMachine as TouchInputStateMachine;
     }
 
     bindListeners(): void {
