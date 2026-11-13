@@ -5,7 +5,7 @@ Drives a [PixiJS](https://pixijs.com/) application from a [`@ue-too/board`](http
 [![npm version](https://img.shields.io/npm/v/@ue-too/board-pixi-integration.svg)](https://www.npmjs.com/package/@ue-too/board-pixi-integration)
 [![license](https://img.shields.io/npm/l/@ue-too/board-pixi-integration.svg)](https://github.com/kinnet-studio/ue-too/blob/main/LICENSE.txt)
 
-[Live example](https://kinnet-studio.github.io/ue-too/pixi-integration/) · [source](https://github.com/kinnet-studio/ue-too/blob/main/apps/examples/src/pixi-integration/main.ts) · React bindings: [`@ue-too/board-pixi-react-integration`](https://www.npmjs.com/package/@ue-too/board-pixi-react-integration)
+[Live example](https://examples.ue-too.dev/pixi-integration/) · [source](https://github.com/kinnet-studio/ue-too/blob/main/apps/examples/src/pixi-integration/main.ts) · React bindings: [`@ue-too/board-pixi-react-integration`](https://www.npmjs.com/package/@ue-too/board-pixi-react-integration)
 
 ## Install
 

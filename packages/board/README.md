@@ -17,7 +17,7 @@
 <p align="center">
   <a href="#examples">Examples</a> •
   <a href="#quick-coding-demo">Quick Coding Demo</a> •
-  <a href="https://kinnet-studio.github.io/ue-too-documentation/board/">Documentation</a> •
+  <a href="https://ue-too.dev/board/">Documentation</a> •
   <a href="#installation-and-usage">Install</a> •
   <a href="#key-features">Key Features</a> •
   <a href="#quick-start-html-canvas">Quick Start</a> •
@@ -25,7 +25,7 @@
   <a href="#under-the-hood">Basic API Overview</a>
 </p>
 
-![small-demo](https://kinnet-studio.github.io/ue-too/assets/doc-media/small-demo-with-cursor.gif)
+![small-demo](https://examples.ue-too.dev/assets/doc-media/small-demo-with-cursor.gif)
 
 <p align="center">
     A demonstration of uē-tôo's core functionality.
@@ -50,32 +50,32 @@
 
 ## Examples
 
-A live website containing the examples is available [here](https://kinnet-studio.github.io/ue-too/).
+A live website containing the examples is available [here](https://examples.ue-too.dev/).
 
-You can also pan, zoom and edit live examples right in the docs: [Live examples](https://kinnet-studio.github.io/ue-too-documentation/board/live-examples).
+You can also pan, zoom and edit live examples right in the docs: [Live examples](https://ue-too.dev/board/live-examples).
 
 This monorepo includes comprehensive examples demonstrating various packages and integrations:
 
 ### Core Examples
 
-- [**Base Example**](https://kinnet-studio.github.io/ue-too/base/) - Basic canvas viewport with pan, zoom, and rotate
-- [**Attach / Detach Example**](https://kinnet-studio.github.io/ue-too/attach-detach/) - Dynamically attach and detach a canvas from the board
-- [**Navigation Example**](https://kinnet-studio.github.io/ue-too/navigation/) - Keyboard-driven camera panning via `panByViewPort()`
-- [**Ruler Example**](https://kinnet-studio.github.io/ue-too/ruler/) - Measurement ruler overlay that updates with pan and zoom
-- [**Camera Animation**](https://kinnet-studio.github.io/ue-too/camera-animation/) - Click to fly the camera anywhere, or back to the start, along a smooth zoom-and-pan path
-- [**Image Example**](https://kinnet-studio.github.io/ue-too/image-example/) - Upload and display an image on the pannable canvas
-- [**SVG Example**](https://kinnet-studio.github.io/ue-too/svg/) - Board camera system applied to SVG elements
+- [**Base Example**](https://examples.ue-too.dev/base/) - Basic canvas viewport with pan, zoom, and rotate
+- [**Attach / Detach Example**](https://examples.ue-too.dev/attach-detach/) - Dynamically attach and detach a canvas from the board
+- [**Navigation Example**](https://examples.ue-too.dev/navigation/) - Keyboard-driven camera panning via `panByViewPort()`
+- [**Ruler Example**](https://examples.ue-too.dev/ruler/) - Measurement ruler overlay that updates with pan and zoom
+- [**Camera Animation**](https://examples.ue-too.dev/camera-animation/) - Click to fly the camera anywhere, or back to the start, along a smooth zoom-and-pan path
+- [**Image Example**](https://examples.ue-too.dev/image-example/) - Upload and display an image on the pannable canvas
+- [**SVG Example**](https://examples.ue-too.dev/svg/) - Board camera system applied to SVG elements
 
 ### Framework Integrations
 
-- [**PixiJS Integration**](https://kinnet-studio.github.io/ue-too/pixi-integration/) - Full-screen PixiJS canvas with board camera controls
-- [**Konva Integration**](https://kinnet-studio.github.io/ue-too/konva-integration/) - Konva.js stage synchronized with board camera transforms
-- [**Fabric Integration**](https://kinnet-studio.github.io/ue-too/fabric-integration/) - Fabric.js with toggleable movement/selection modes
+- [**PixiJS Integration**](https://examples.ue-too.dev/pixi-integration/) - Full-screen PixiJS canvas with board camera controls
+- [**Konva Integration**](https://examples.ue-too.dev/konva-integration/) - Konva.js stage synchronized with board camera transforms
+- [**Fabric Integration**](https://examples.ue-too.dev/fabric-integration/) - Fabric.js with toggleable movement/selection modes
 
 
 ## Documentation
 
-The documentation is available [here](https://kinnet-studio.github.io/ue-too-documentation/board/).
+The documentation is available [here](https://ue-too.dev/board/).
 
 ## Installation and Usage
 

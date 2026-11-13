@@ -5,7 +5,7 @@ Drives a [Konva](https://konvajs.org/) stage from a [`@ue-too/board`](https://ww
 [![npm version](https://img.shields.io/npm/v/@ue-too/board-konva-integration.svg)](https://www.npmjs.com/package/@ue-too/board-konva-integration)
 [![license](https://img.shields.io/npm/l/@ue-too/board-konva-integration.svg)](https://github.com/kinnet-studio/ue-too/blob/main/LICENSE.txt)
 
-[Live example](https://kinnet-studio.github.io/ue-too/konva-integration/) · [source](https://github.com/kinnet-studio/ue-too/blob/main/apps/examples/src/konva-integration/main.ts)
+[Live example](https://examples.ue-too.dev/konva-integration/) · [source](https://github.com/kinnet-studio/ue-too/blob/main/apps/examples/src/konva-integration/main.ts)
 
 ## Install
 

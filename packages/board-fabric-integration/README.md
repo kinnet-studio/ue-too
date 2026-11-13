@@ -5,7 +5,7 @@ Drives a [Fabric.js](https://fabricjs.com/) canvas from a [`@ue-too/board`](http
 [![npm version](https://img.shields.io/npm/v/@ue-too/board-fabric-integration.svg)](https://www.npmjs.com/package/@ue-too/board-fabric-integration)
 [![license](https://img.shields.io/npm/l/@ue-too/board-fabric-integration.svg)](https://github.com/kinnet-studio/ue-too/blob/main/LICENSE.txt)
 
-[Live example](https://kinnet-studio.github.io/ue-too/fabric-integration/) · [source](https://github.com/kinnet-studio/ue-too/blob/main/apps/examples/src/fabric-integration/main.ts)
+[Live example](https://examples.ue-too.dev/fabric-integration/) · [source](https://github.com/kinnet-studio/ue-too/blob/main/apps/examples/src/fabric-integration/main.ts)
 
 ## Install
 

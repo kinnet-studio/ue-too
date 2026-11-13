@@ -58,7 +58,7 @@ packages/
     being-devtools/ — Attachable debugger panel for being machines (state chart, event log, context)
 
 apps/
-    examples/       — Interactive demos (https://kinnet-studio.github.io/ue-too/)
+    examples/       — Interactive demos (https://examples.ue-too.dev/)
     blast/          — Tabletop game prototype maker (WIP)
     board-react/    — React example app
     board-vue/      — Vue example app
