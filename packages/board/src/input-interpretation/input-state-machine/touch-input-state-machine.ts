@@ -97,6 +97,78 @@ export type TouchInputEventOutputMapping = {
 };
 
 /**
+ * Turns a two-finger move into a pan or a zoom, whichever the fingers did
+ * more of. Shared by {@link PendingState} and {@link InProgressState} so the
+ * first move of a gesture behaves like every later one.
+ */
+function twoFingerPanOrZoom(
+    context: TouchContext,
+    payload: TouchEventPayload
+): TouchOutputEvent {
+    const idents = payload.points.map(p => p.ident);
+    const initialPositions = context.getInitialTouchPointsPositions(idents);
+    const currentPositions = payload.points;
+    const initialStartAndEndDistance = PointCal.distanceBetweenPoints(
+        initialPositions[0],
+        initialPositions[1]
+    );
+    const currentStartAndEndDistance = PointCal.distanceBetweenPoints(
+        currentPositions[0],
+        currentPositions[1]
+    );
+    const midPoint = PointCal.linearInterpolation(
+        initialPositions[0],
+        initialPositions[1],
+        0.5
+    );
+    const currentMidPoint = PointCal.linearInterpolation(
+        currentPositions[0],
+        currentPositions[1],
+        0.5
+    );
+    const midPointDelta = PointCal.subVector(midPoint, currentMidPoint);
+    const cameraCenterInWindow = {
+        x: context.canvas.position.x + context.canvas.width / 2,
+        y: context.canvas.position.y + context.canvas.height / 2,
+    };
+    const midPointInViewPort = PointCal.subVector(
+        midPoint,
+        cameraCenterInWindow
+    );
+    let panZoom =
+        Math.abs(currentStartAndEndDistance - initialStartAndEndDistance) >
+        PointCal.distanceBetweenPoints(midPoint, currentMidPoint)
+            ? 'ZOOMING'
+            : 'PANNING';
+
+    context.updateTouchPoints(currentPositions);
+    switch (panZoom) {
+        case 'ZOOMING':
+            if (!context.alignCoordinateSystem) {
+                midPointInViewPort.y = -midPointInViewPort.y;
+            }
+            return {
+                type: 'zoom',
+                delta:
+                    -(initialStartAndEndDistance - currentStartAndEndDistance) *
+                    0.005,
+                anchorPointInViewPort: midPointInViewPort,
+            };
+        case 'PANNING':
+            if (!context.alignCoordinateSystem) {
+                midPointDelta.y = -midPointDelta.y;
+            }
+            return {
+                type: 'pan',
+                delta: midPointDelta,
+            };
+        default:
+            console.warn('Unknown panZoom state', panZoom);
+            return { type: 'none' };
+    }
+}
+
+/**
  * IDLE state - waiting for two-finger touch.
  *
  * @remarks
@@ -211,62 +283,7 @@ export class PendingState extends TemplateState<
         context: TouchContext,
         payload: TouchEventPayload
     ): TouchOutputEvent {
-        const idents = payload.points.map(p => p.ident);
-        const initialPositions = context.getInitialTouchPointsPositions(idents);
-        const currentPositions = payload.points;
-        const initialStartAndEndDistance = PointCal.distanceBetweenPoints(
-            initialPositions[0],
-            initialPositions[1]
-        );
-        const currentStartAndEndDistance = PointCal.distanceBetweenPoints(
-            currentPositions[0],
-            currentPositions[1]
-        );
-        const midPoint = PointCal.linearInterpolation(
-            initialPositions[0],
-            initialPositions[1],
-            0.5
-        );
-        const currentMidPoint = PointCal.linearInterpolation(
-            currentPositions[0],
-            currentPositions[1],
-            0.5
-        );
-        const midPointDelta = PointCal.subVector(midPoint, currentMidPoint);
-        const cameraCenterInWindow = {
-            x: context.canvas.position.x + context.canvas.width / 2,
-            y: context.canvas.position.y + context.canvas.height / 2,
-        };
-        const midPointInViewPort = PointCal.subVector(
-            midPoint,
-            cameraCenterInWindow
-        );
-        let panZoom =
-            Math.abs(currentStartAndEndDistance - initialStartAndEndDistance) >
-            PointCal.distanceBetweenPoints(midPoint, currentMidPoint)
-                ? 'ZOOMING'
-                : 'PANNING';
-
-        context.updateTouchPoints(currentPositions);
-        switch (panZoom) {
-            case 'ZOOMING':
-                return {
-                    type: 'zoom',
-                    delta:
-                        (currentStartAndEndDistance -
-                            initialStartAndEndDistance) *
-                        0.005,
-                    anchorPointInViewPort: midPointInViewPort,
-                };
-            case 'PANNING':
-                return {
-                    type: 'pan',
-                    delta: midPointDelta,
-                };
-            default:
-                console.warn('Unknown panZoom state', panZoom);
-                return { type: 'none' };
-        }
+        return twoFingerPanOrZoom(context, payload);
     }
 }
 
@@ -305,69 +322,7 @@ export class InProgressState extends TemplateState<
         context: TouchContext,
         payload: TouchEventPayload
     ): TouchOutputEvent {
-        const idents = payload.points.map(p => p.ident);
-        const initialPositions = context.getInitialTouchPointsPositions(idents);
-        const currentPositions = payload.points;
-        const initialStartAndEndDistance = PointCal.distanceBetweenPoints(
-            initialPositions[0],
-            initialPositions[1]
-        );
-        const currentStartAndEndDistance = PointCal.distanceBetweenPoints(
-            currentPositions[0],
-            currentPositions[1]
-        );
-        const midPoint = PointCal.linearInterpolation(
-            initialPositions[0],
-            initialPositions[1],
-            0.5
-        );
-        const currentMidPoint = PointCal.linearInterpolation(
-            currentPositions[0],
-            currentPositions[1],
-            0.5
-        );
-        const midPointDelta = PointCal.subVector(midPoint, currentMidPoint);
-        const cameraCenterInWindow = {
-            x: context.canvas.position.x + context.canvas.width / 2,
-            y: context.canvas.position.y + context.canvas.height / 2,
-        };
-        const midPointInViewPort = PointCal.subVector(
-            midPoint,
-            cameraCenterInWindow
-        );
-        let panZoom =
-            Math.abs(currentStartAndEndDistance - initialStartAndEndDistance) >
-            PointCal.distanceBetweenPoints(midPoint, currentMidPoint)
-                ? 'ZOOMING'
-                : 'PANNING';
-
-        context.updateTouchPoints(currentPositions);
-        switch (panZoom) {
-            case 'ZOOMING':
-                if (!context.alignCoordinateSystem) {
-                    midPointInViewPort.y = -midPointInViewPort.y;
-                }
-                return {
-                    type: 'zoom',
-                    delta:
-                        -(
-                            initialStartAndEndDistance -
-                            currentStartAndEndDistance
-                        ) * 0.005,
-                    anchorPointInViewPort: midPointInViewPort,
-                };
-            case 'PANNING':
-                if (!context.alignCoordinateSystem) {
-                    midPointDelta.y = -midPointDelta.y;
-                }
-                return {
-                    type: 'pan',
-                    delta: midPointDelta,
-                };
-            default:
-                console.warn('Unknown panZoom state', panZoom);
-                return { type: 'none' };
-        }
+        return twoFingerPanOrZoom(context, payload);
     }
 
     touchend(context: TouchContext, payload: TouchEventPayload): void {
