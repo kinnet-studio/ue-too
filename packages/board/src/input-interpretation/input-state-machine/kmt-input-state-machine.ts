@@ -240,15 +240,17 @@ const MAX_WHEEL_ZOOM_LOG_STEP = Math.log(MAX_WHEEL_ZOOM_FACTOR);
  * - Process scroll events (pan or zoom depending on device and modifiers)
  * - Detect spacebar press to enter pan mode
  * - Detect middle-click to enter pan mode
- * - Distinguish between mouse and trackpad input modalities
+ * - Feed input-modality scoring while auto-detection is on
  *
  * **Scroll Behavior**:
  * - Ctrl + Scroll: Always zoom (both mouse and trackpad)
- * - Scroll (no Ctrl): Pan (trackpad) or Zoom (mouse, determined by modality detection)
+ * - Scroll (no Ctrl): Zoom in `'kmt'` mode (the default); Pan in `'trackpad'` mode
+ *   and while auto-detection is undecided (`'TBD'`)
  *
- * **Input Modality Detection**:
+ * **Input Modality Detection** (off by default, see
+ * {@link ObservableInputTracker.enableInputModeDetection}):
  * The state tracks horizontal scroll deltas to distinguish trackpads (which produce deltaX)
- * from mice (which typically only produce deltaY). This affects zoom behavior.
+ * from mice (which typically only produce deltaY), and a middle-click settles on `'kmt'`.
  *
  * @category Input State Machine - KMT
  */

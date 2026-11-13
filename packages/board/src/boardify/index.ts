@@ -21,6 +21,7 @@ import { InputOrchestrator } from '../input-interpretation/input-orchestrator';
 import {
     CanvasDimensions,
     CanvasProxy,
+    KmtInputMode,
     KmtInputStateMachine,
     ObservableInputTracker,
     TouchContext,
@@ -1076,15 +1077,32 @@ export default class Board {
         return this.cameraRig;
     }
 
-    setInputMode(mode: 'kmt' | 'trackpad'): void {
+    /**
+     * Sets the input device the board is set up for and turns auto-detection off.
+     *
+     * @remarks
+     * Boards start in `'kmt'` (keyboard + mouse: a plain scroll wheel zooms). In
+     * `'trackpad'` a two-finger swipe pans and a pinch zooms. Give users a way to
+     * choose (and remember their choice) rather than guessing from their input.
+     *
+     * @param mode - `'kmt'` or `'trackpad'`
+     *
+     * @example
+     * ```typescript
+     * const board = new Board(canvas);
+     * board.setInputMode('trackpad');
+     * ```
+     */
+    setInputMode(mode: KmtInputMode): void {
         this._observableInputTracker.setMode(mode);
     }
 
     /**
      * The current input modality.
      *
-     * @returns `'kmt'` (keyboard-mouse), `'trackpad'`, or `'TBD'` when
-     * auto-detection is active and has not yet committed to a mode.
+     * @returns `'kmt'` (keyboard-mouse, the default), `'trackpad'`, or `'TBD'`
+     * when auto-detection was turned on with {@link enableAutoInputMode} and has
+     * not yet committed to a mode.
      */
     get inputMode(): 'kmt' | 'trackpad' | 'TBD' {
         return this._observableInputTracker.mode;
@@ -1106,10 +1124,11 @@ export default class Board {
     }
 
     /**
-     * Returns the board to auto-detection of input modality after a manual lock
-     * set via {@link setInputMode} or {@link toggleInputMode}.
+     * Opts into auto-detection of the input modality.
      *
-     * The mode reverts to `'TBD'` until auto-detection commits to a mode.
+     * The mode becomes `'TBD'`, where a plain scroll pans, until a middle-click
+     * settles it on `'kmt'`. Auto-detection is off by default; prefer letting
+     * the user choose with {@link setInputMode}.
      */
     enableAutoInputMode(): void {
         this._observableInputTracker.enableInputModeDetection();
