@@ -1,7 +1,7 @@
 /** Space kept clear around a fitted canvas, in CSS pixels. */
 const GUTTER = 16;
 /** On a window too short for everything (a phone held sideways), stop
- *  shrinking here: a tiny canvas is less use than one that runs off-screen. */
+ *  shrinking here and let the page scroll: a tiny canvas is no use. */
 const MIN_ROOM_HEIGHT = 200;
 
 export type Size = { width: number; height: number };
@@ -66,10 +66,11 @@ function roomFor(graph: Element, column: Element): Size {
 }
 
 /**
- * Sizes an example's canvas to fit the window, so the page neither scrolls
- * sideways on a phone nor cuts off its instructions on a short laptop
- * screen: calls `apply` with the fitted size now and again whenever the
- * window or the rest of the page's column changes size.
+ * Sizes an example's canvas to fit the window, so the whole page shows
+ * without scrolling on a phone or a short laptop screen (only a window too
+ * short even for the instructions scrolls): calls `apply` with the fitted
+ * size now and again whenever the window or the rest of the page's column
+ * changes size.
  *
  * `graph` must sit in the page's `.container` column.
  */
