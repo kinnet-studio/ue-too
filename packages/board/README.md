@@ -147,6 +147,17 @@ Zoom:
 - Trackpad: Two-finger pinch
 - Touch: Two-finger pinch
 
+By default a single finger does nothing, so taps and drags stay free for your app's own UI. To pan with one finger and pinch-zoom with two, as in a map app, swap in the built-in one-finger-pan touch machine:
+
+```ts
+import { Board, createOneFingerPanTouchInputStateMachine } from '@ue-too/board';
+
+const board = new Board(canvas);
+board.setTouchInputStateMachine(createOneFingerPanTouchInputStateMachine);
+```
+
+To tweak it further, build your own variant with `expandOneFingerPanTouchInputStateMachine` and pass a function that builds it to `setTouchInputStateMachine`.
+
 ### A Few Things to Note
 
 - All drawing operations should be performed in the `requestAnimationFrame` callback after the `step` function of the `Board` class instance is called, the `step` function clears the canvas.

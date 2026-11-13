@@ -23,6 +23,7 @@ import {
     CanvasProxy,
     KmtInputStateMachine,
     ObservableInputTracker,
+    TouchContext,
     TouchInputStateMachine,
     TouchInputTracker,
     createKmtInputStateMachine,
@@ -30,6 +31,7 @@ import {
 } from '../input-interpretation/input-state-machine';
 import {
     KMTEventParser,
+    StateMachine,
     VanillaKMTEventParser,
 } from '../input-interpretation/raw-input-parser';
 import {
@@ -698,6 +700,57 @@ export default class Board {
         return hasBeingStateMachineShape<TouchInputStateMachine>(machine)
             ? machine
             : undefined;
+    }
+
+    /**
+     * Swaps the state machine that turns touch input into camera moves.
+     *
+     * @param createMachine - Builds the machine from the board's own touch
+     * context, e.g. {@link createOneFingerPanTouchInputStateMachine},
+     * {@link createTouchInputStateMachine}, or your own function wrapping an
+     * `expand...` helper
+     * @returns The machine `createMachine` built, with its real type
+     *
+     * @remarks
+     * The board installs a new {@link VanillaTouchEventParser} driving the
+     * machine, through the {@link touchParser} setter. A disabled touch
+     * parser stays disabled. Because the machine shares the board's touch
+     * context, {@link alignCoordinateSystem} keeps applying to it.
+     *
+     * {@link touchParser} and {@link touchInputStateMachine} return the new
+     * machine afterwards, but keep their stock type; use the return value
+     * when you need the machine's real type.
+     *
+     * To use a custom parser instead, build it with the machine and assign it
+     * to {@link touchParser}.
+     *
+     * @example
+     * One finger pans, two fingers pinch-zoom:
+     * ```typescript
+     * const board = new Board(canvas);
+     * board.setTouchInputStateMachine(createOneFingerPanTouchInputStateMachine);
+     * ```
+     *
+     * @example
+     * Back to the default, where only two-finger gestures move the camera:
+     * ```typescript
+     * board.setTouchInputStateMachine(createTouchInputStateMachine);
+     * ```
+     */
+    setTouchInputStateMachine<Machine extends StateMachine>(
+        createMachine: (context: TouchContext) => Machine
+    ): Machine {
+        const machine = createMachine(this._touchInputTracker);
+        const parser = new VanillaTouchEventParser(
+            machine,
+            this._inputOrchestrator,
+            this._canvasElement
+        );
+        if (this._touchParser.disabled) {
+            parser.disable();
+        }
+        this.touchParser = parser;
+        return machine;
     }
 
     /**
