@@ -349,6 +349,16 @@ export class VanillaKMTEventParser implements KMTEventParser {
         if (e.target !== document.body) {
             return;
         }
+        // Space with the pointer over the canvas starts Space + drag panning:
+        // keep the page from scrolling, on every key repeat too. Elsewhere,
+        // Space still scrolls the page.
+        if (
+            e.key === ' ' &&
+            !this._disabled &&
+            this._canvas?.matches(':hover')
+        ) {
+            e.preventDefault();
+        }
         if (this._keyfirstPressed.has(e.key)) {
             return;
         }
