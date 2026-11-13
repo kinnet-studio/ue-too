@@ -37,6 +37,8 @@ components.cleanup();
 
 Every option is optional. `fullScreen` resizes the renderer to the window, and `limitEntireViewPort` keeps the camera's minimum zoom high enough that the boundaries always fill the viewport — recomputed on every resize.
 
+`inputMode` picks the input device: `'kmt'` (keyboard + mouse, the default — the scroll wheel zooms) or `'trackpad'` (a two-finger swipe pans, a pinch zooms). Let your users choose and switch live with `components.observableInputTracker.setMode('trackpad')`.
+
 Pan, zoom and rotate are live as soon as this resolves: both parsers are already set up, and a ticker callback copies `camera.getTransform()` onto `app.stage` whenever it changes.
 
 ## The long way: `PixiInputParser`

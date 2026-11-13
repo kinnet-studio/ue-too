@@ -22,6 +22,8 @@ import {
     Sprite,
 } from 'pixi.js';
 
+import { followInputMode } from '../input-mode';
+
 // Asynchronous IIFE
 (async () => {
     // Create a PixiJS application.
@@ -53,6 +55,7 @@ import {
         new RawUserInputPublisher()
     );
     const observableInputTracker = new ObservableInputTracker(canvasProxy);
+    followInputMode(mode => observableInputTracker.setMode(mode));
     const kmtInputStateMachine = createKmtInputStateMachine(
         observableInputTracker
     );

@@ -9,14 +9,24 @@ import {
 } from '@ue-too/board';
 import { Point } from '@ue-too/math';
 
+import { fitToPage } from '../fit-to-page';
+import { followInputMode } from '../input-mode';
+
 const tileImage = new Image();
 tileImage.src = new URL('./tile.png', import.meta.url).href;
 
 const canvas = document.getElementById('graph') as HTMLCanvasElement;
+// 800 × 600, or smaller to fit a phone or a short window; the board
+// follows the canvas's CSS size
+fitToPage(canvas, 800, 600, ({ width, height }) => {
+    canvas.style.width = `${width}px`;
+    canvas.style.height = `${height}px`;
+});
 const backButton = document.getElementById(
     'back-to-start'
 ) as HTMLButtonElement;
 const board = new Board(canvas);
+followInputMode(mode => board.setInputMode(mode));
 const cameraMux = board.cameraMux as CameraMuxWithAnimationAndLock;
 const cameraRig = board.getCameraRig();
 

@@ -582,6 +582,20 @@ export class WorkerRelayCanvas implements Canvas {
 }
 
 /**
+ * The input device a KMT board is set up for.
+ *
+ * @remarks
+ * - `'kmt'`: keyboard + mouse. A plain scroll wheel zooms at the cursor.
+ * - `'trackpad'`: a two-finger swipe pans; pinch (Ctrl+Scroll) zooms.
+ *
+ * Boards start in `'kmt'`. Let the user choose rather than guessing: switch with
+ * {@link ObservableInputTracker.setMode} (or `Board.setInputMode`).
+ *
+ * @category Input State Machine
+ */
+export type KmtInputMode = 'kmt' | 'trackpad';
+
+/**
  * Context interface for the Keyboard/Mouse/Trackpad (KMT) input state machine.
  *
  * @remarks
@@ -591,11 +605,15 @@ export class WorkerRelayCanvas implements Canvas {
  * 3. Access canvas dimensions for coordinate transformations
  * 4. Manage coordinate system alignment (inverted Y-axis handling)
  *
- * **Input Modality Detection**:
- * The context uses a scoring system (`kmtTrackpadTrackScore`) to differentiate between
- * mouse and trackpad input, which have different zoom behaviors:
- * - Mouse: Ctrl+Scroll = zoom, Scroll = pan
- * - Trackpad: Scroll = zoom (no Ctrl needed), Two-finger gesture = pan
+ * **Input Modality**:
+ * `mode` decides what a plain scroll does (Ctrl+Scroll, which is also what browsers
+ * send for a trackpad pinch, always zooms):
+ * - `'kmt'` (keyboard + mouse): Scroll = zoom at the cursor
+ * - `'trackpad'`: Scroll (two-finger swipe) = pan
+ * - `'TBD'` (auto-detection, undecided): Scroll = pan
+ *
+ * The scoring members (`kmtTrackpadTrackScore` and friends) only matter while
+ * auto-detection is on.
  *
  * **Coordinate System**:
  * The `alignCoordinateSystem` flag determines Y-axis orientation:
@@ -624,7 +642,7 @@ export interface KmtInputContext extends BaseContext {
     subtractKmtTrackpadTrackScore: () => void;
     /** Increases the score toward mouse */
     addKmtTrackpadTrackScore: () => void;
-    /** Sets the determined input modality */
+    /** Sets the input modality and stops auto-detection */
     setMode: (mode: 'kmt' | 'trackpad' | 'TBD') => void;
     /** The current input modality: 'kmt' (mouse), 'trackpad', or 'TBD' (to be determined) */
     mode: 'kmt' | 'trackpad' | 'TBD';
@@ -687,15 +705,18 @@ export class DummyKmtInputContext implements KmtInputContext {
  *
  * **State Tracking**:
  * - Initial cursor position for calculating pan deltas
- * - Input modality score to distinguish mouse vs trackpad
- * - Determined input mode (kmt/trackpad/TBD)
+ * - Input mode (kmt/trackpad, or TBD while auto-detecting)
  * - Coordinate system alignment preference
  *
- * **Input Modality Detection**:
- * The `kmtTrackpadTrackScore` accumulates evidence about the input device:
- * - Positive values indicate mouse behavior (middle-click, no horizontal scroll)
- * - Negative values indicate trackpad behavior (horizontal scroll, two-finger gestures)
- * - Score is used to determine zoom behavior (Ctrl+Scroll for mouse vs Scroll for trackpad)
+ * **Input Mode**:
+ * The tracker starts locked in the mode passed to the constructor (`'kmt'` by
+ * default). Auto-detection is off: guessing the device from wheel events is
+ * unreliable, so give the user a choice and call {@link setMode} with it.
+ *
+ * {@link enableInputModeDetection} opts back into auto-detection: the mode becomes
+ * `'TBD'` (a plain scroll pans) and `kmtTrackpadTrackScore` accumulates evidence
+ * (positive for mouse-like wheel events and middle-clicks, negative for two-axis
+ * scrolls). A middle-click settles the mode on `'kmt'`.
  *
  * **Design Pattern**:
  * This class follows the Context pattern from the @ue-too/being state machine library,
@@ -713,6 +734,12 @@ export class DummyKmtInputContext implements KmtInputContext {
  * stateMachine.happens("leftPointerDown", {x: 100, y: 200});
  * console.log(context.initialCursorPosition); // {x: 100, y: 200}
  * ```
+ *
+ * @example
+ * Start a board set up for a trackpad
+ * ```typescript
+ * const context = new ObservableInputTracker(canvasProxy, 'trackpad');
+ * ```
  */
 export class ObservableInputTracker implements KmtInputContext {
     private _alignCoordinateSystem: boolean;
@@ -720,25 +747,47 @@ export class ObservableInputTracker implements KmtInputContext {
     private _initialCursorPosition: Point;
     private _kmtTrackpadTrackScore: number; // > 0 for kmt; < 0 for trackpad; 0 for TBD;
     private _mode: 'kmt' | 'trackpad' | 'TBD';
-    private _deciding: boolean = true;
+    private _deciding: boolean = false;
 
-    constructor(canvasOperator: Canvas) {
+    /**
+     * @param canvasOperator - Canvas accessor for dimensions and cursor control
+     * @param inputMode - The input device to start in. Defaults to `'kmt'`
+     * (keyboard + mouse).
+     */
+    constructor(canvasOperator: Canvas, inputMode: KmtInputMode = 'kmt') {
         this._alignCoordinateSystem = true;
         this._canvasOperator = canvasOperator;
         this._initialCursorPosition = { x: 0, y: 0 };
         this._kmtTrackpadTrackScore = 0;
-        this._mode = 'TBD';
+        this._mode = inputMode;
     }
 
+    /**
+     * The current input mode: `'kmt'`, `'trackpad'`, or `'TBD'` while
+     * auto-detection is on and undecided.
+     */
     get mode(): 'kmt' | 'trackpad' | 'TBD' {
         return this._mode;
     }
 
+    /**
+     * Switches the input mode and turns auto-detection off.
+     *
+     * @param mode - The input mode to lock in
+     */
     setMode(mode: 'kmt' | 'trackpad' | 'TBD'): void {
         this._deciding = false;
         this._mode = mode;
     }
 
+    /**
+     * Opts into auto-detection: resets the mode to `'TBD'` (a plain scroll pans)
+     * and starts scoring input. A middle-click settles the mode on `'kmt'`.
+     *
+     * @remarks
+     * Auto-detection is off by default. Prefer letting the user choose with
+     * {@link setMode}.
+     */
     enableInputModeDetection(): void {
         this._deciding = true;
         this._kmtTrackpadTrackScore = 0;

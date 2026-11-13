@@ -135,17 +135,26 @@ requestAnimationFrame(draw);
 
 ### Default Input Controls
 
+A board starts set up for a keyboard + mouse. Mouse and trackpad scrolling look alike to the browser, so the board doesn't guess: give your users a way to pick their device and call `setInputMode` with their choice.
+
+```ts
+const board = new Board(canvas);
+board.setInputMode('trackpad'); // or 'kmt' (keyboard + mouse, the default)
+```
+
 Pan:
 
-- Mouse + Keyboard: Drag while holding spacebar or use scroll wheel button
+- Keyboard + mouse: Drag while holding spacebar or use scroll wheel button
 - Trackpad: Two-finger swipe
 - Touch: Two-finger swipe
 
 Zoom:
 
-- Mouse + Keyboard: Ctrl + scroll wheel
+- Keyboard + mouse: Scroll wheel (Ctrl + scroll wheel also works)
 - Trackpad: Two-finger pinch
 - Touch: Two-finger pinch
+
+`board.toggleInputMode()` flips between the two modes and `board.inputMode` reads the current one. To fall back to the old automatic behavior, call `board.enableAutoInputMode()`: the scroll wheel pans until the user middle-clicks, which switches to keyboard + mouse.
 
 By default a single finger does nothing, so taps and drags stay free for your app's own UI. To pan with one finger and pinch-zoom with two, as in a map app, swap in the built-in one-finger-pan touch machine:
 

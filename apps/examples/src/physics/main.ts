@@ -7,6 +7,8 @@ import {
 } from '@ue-too/dynamics';
 import { FixedPinJoint, PinJoint } from '@ue-too/dynamics';
 
+import { followInputMode } from '../input-mode';
+
 const world = new World(1000, 1000);
 world.resolveCollision = false;
 const bodies: RigidBody[] = [];
@@ -17,6 +19,7 @@ const randomPoint = randomPointGenerator(
 
 const canvas = document.getElementById('graph') as HTMLCanvasElement;
 const board = new Board(canvas);
+followInputMode(mode => board.setInputMode(mode));
 
 const forceMap = {
     ArrowUp: false,

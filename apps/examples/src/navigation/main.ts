@@ -1,7 +1,17 @@
 import { Board } from '@ue-too/board';
 
+import { fitToPage } from '../fit-to-page';
+import { followInputMode } from '../input-mode';
+
 const canvas = document.getElementById('graph') as HTMLCanvasElement;
+// 600 × 500, or smaller to fit a phone or a short window; the board
+// follows the canvas's CSS size
+fitToPage(canvas, 600, 500, ({ width, height }) => {
+    canvas.style.width = `${width}px`;
+    canvas.style.height = `${height}px`;
+});
 const board = new Board(canvas);
+followInputMode(mode => board.setInputMode(mode));
 
 function drawGrid(ctx: CanvasRenderingContext2D, spacing: number, extent: number) {
     ctx.save();

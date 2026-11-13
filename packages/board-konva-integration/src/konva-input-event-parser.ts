@@ -121,6 +121,9 @@ export class KonvaInputParser {
 
     scrollHandler(eventObject: KonvaEventObject<WheelEvent, Stage>) {
         const e = eventObject.evt;
+        // The wheel drives the camera: don't also scroll the page, and don't
+        // let a pinch (Ctrl + wheel) zoom the whole browser page.
+        e.preventDefault();
         if (e.ctrlKey) {
             this.processEvent('scrollWithCtrl', {
                 x: e.clientX,
@@ -139,6 +142,16 @@ export class KonvaInputParser {
     }
 
     keydownHandler(event: KeyboardEvent) {
+        // Space aimed at the page with the pointer over the stage starts
+        // Space + drag panning: keep the page from scrolling, on every key
+        // repeat too. Elsewhere, or typed into a field, Space is left alone.
+        if (
+            event.key === ' ' &&
+            event.target === document.body &&
+            this._stage.container().matches(':hover')
+        ) {
+            event.preventDefault();
+        }
         if (this._keyfirstPressed.has(event.key)) {
             return;
         }

@@ -13,6 +13,9 @@ import {
 import { FabricInputEventParser } from '@ue-too/board-fabric-integration';
 import { Canvas, FabricText, Rect, TMat2D } from 'fabric';
 
+import { fitToPage } from '../fit-to-page';
+import { followInputMode } from '../input-mode';
+
 const canvas = document.getElementById('graph') as HTMLCanvasElement;
 const fabricCanvas = new Canvas('graph', { selection: false });
 const helloWorld = new FabricText('Hello world!', {
@@ -34,14 +37,17 @@ const rectangle = new Rect({
 });
 fabricCanvas.add(rectangle);
 
-const width = parseInt(canvas.style.width);
-const height = parseInt(canvas.style.height);
 const camera = new DefaultBoardCamera({
-    viewPortWidth: width,
-    viewPortHeight: height,
     position: { x: 0, y: 0 },
     rotation: 0,
     zoomLevel: 2,
+});
+
+// 800 × 600, or smaller to fit a phone or a short window
+fitToPage(canvas, 800, 600, size => {
+    fabricCanvas.setDimensions(size);
+    camera.viewPortWidth = size.width;
+    camera.viewPortHeight = size.height;
 });
 const canvasProxy = new CanvasProxy(canvas);
 const cameraRig = createDefaultCameraRig(camera);
@@ -51,6 +57,7 @@ const inputOrchestrator = new InputOrchestrator(
     new RawUserInputPublisher()
 );
 const observableInputTracker = new ObservableInputTracker(canvasProxy);
+followInputMode(mode => observableInputTracker.setMode(mode));
 const kmtInputStateMachine = createKmtInputStateMachine(observableInputTracker);
 const kmtParser = new VanillaKMTEventParser(
     kmtInputStateMachine,

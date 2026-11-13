@@ -4,6 +4,10 @@ const zhTW = {
     'index.subtitle': '互動式範例與 demo ',
     'index.description': '探索以下各種功能與整合範例。',
 
+    // Input device switch (shown next to the language picker)
+    'input-mode.kmt': '鍵盤與滑鼠',
+    'input-mode.trackpad': '觸控板',
+
     // Nav links
     'nav.base': '基本',
     'nav.attach-detach': '掛載 / 卸載',
@@ -161,8 +165,6 @@ const zhTW = {
         '<strong>觸控：</strong> <kbd>單指拖曳</kbd> 平移，<kbd>捏合</kbd> 縮放',
     'pele-mermaid.credit': '起始圖表：gitGraph 範例取自',
     'pele-mermaid.credit-link': 'Pele 官方 Playground',
-    'pele-mermaid.controls-mouse':
-        '<kbd>Ctrl + 滾輪</kbd> 縮放，<kbd>中鍵拖曳</kbd> 或 <kbd>空白鍵 + 左鍵拖曳</kbd> 平移',
 
     // Pixi example
     'pixi.title': 'PixiJS 整合',

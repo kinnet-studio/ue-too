@@ -62,10 +62,16 @@
                 font-size: 12px;
                 font-family: monospace;
             }
+            /* The side panel is narrow at every screen size: give the
+               language picker and input switch their own line above the
+               title rather than floating them over it. */
             .lang-bar {
-                position: absolute;
-                top: 12px;
-                right: 16px;
+                display: flex;
+                flex-wrap: wrap;
+                justify-content: flex-end;
+                align-items: center;
+                row-gap: 4px;
+                margin-bottom: 8px;
             }
             .editor label {
                 font-size: 13px;
@@ -161,8 +167,8 @@
                     SVG group around it, so the diagram stays sharp at any zoom.
                 </p>
                 <ul>
-                    <li data-i18n-html="pele-mermaid.controls-mouse">
-                        <kbd>Ctrl + Scroll</kbd> to zoom,
+                    <li data-i18n-html="controls.scroll-and-pan">
+                        <kbd>Scroll</kbd> to zoom,
                         <kbd>Middle Mouse Drag</kbd> or
                         <kbd>Space + Left Drag</kbd> to pan
                     </li>

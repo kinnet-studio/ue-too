@@ -20,9 +20,9 @@ globalThis.MutationObserver ??=
     NoopObserver as unknown as typeof MutationObserver;
 
 describe('Board input mode', () => {
-    it('defaults to TBD (auto-detection)', () => {
+    it('defaults to keyboard-mouse', () => {
         const board = new Board();
-        expect(board.inputMode).toBe('TBD');
+        expect(board.inputMode).toBe('kmt');
     });
 
     it('inputMode reflects setInputMode("kmt")', () => {
@@ -53,6 +53,8 @@ describe('Board input mode', () => {
 
     it('toggleInputMode from TBD lands on kmt', () => {
         const board = new Board();
+        board.setInputMode('trackpad');
+        board.enableAutoInputMode();
         expect(board.inputMode).toBe('TBD');
         board.toggleInputMode();
         expect(board.inputMode).toBe('kmt');
