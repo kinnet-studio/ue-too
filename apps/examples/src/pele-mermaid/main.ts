@@ -16,6 +16,7 @@ import {
 
 import { DIAGRAM_FONT, DiagramResult, renderDiagram } from './diagram';
 import { MAX_ZOOM, MIN_ZOOM, fitView } from './fit';
+import { enableLinkTaps } from './link-taps';
 import { SAMPLE_DIAGRAM } from './sample';
 import { StageTouchEventParser } from './stage-touch-parser';
 
@@ -65,6 +66,8 @@ const touchParser = new StageTouchEventParser(
     stage
 );
 touchParser.setUp();
+// The touch parser cancels touchstart, which also cancels taps on links
+enableLinkTaps(stage);
 
 // The board only reads keys aimed at <body>. If the editor (or any other
 // control) has focus and the user points at the diagram and presses Space,
@@ -119,6 +122,13 @@ let dragged = false;
 stage.addEventListener(
     'pointerdown',
     e => {
+        // Touch produces no native click here (the touch parser cancels
+        // touchstart); link taps are handled by enableLinkTaps instead
+        if (e.pointerType === 'touch') {
+            pressedAt = undefined;
+            dragged = false;
+            return;
+        }
         pressedAt = { x: e.clientX, y: e.clientY };
         dragged = false;
     },
