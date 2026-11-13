@@ -33,11 +33,13 @@
 
     --c-danger-1: #b8272c;
 
-    /* Buttons, as the docs' brand buttons */
-    --button-brand-text: #ffffff;
+    /* Buttons, as the docs' brand buttons: dark text on the green, since
+       white text is 1.7:1 to 3.1:1 on these greens and #13200b 5.4:1 or
+       more. Pressing keeps the hover green (brand-1 would give 4.3:1). */
+    --button-brand-text: #13200b;
     --button-brand-bg: var(--c-brand-3);
     --button-brand-hover-bg: var(--c-brand-2);
-    --button-brand-active-bg: var(--c-brand-1);
+    --button-brand-active-bg: var(--c-brand-2);
 
     --font-family-base:
         'Inter', ui-sans-serif, system-ui, sans-serif, 'Apple Color Emoji',

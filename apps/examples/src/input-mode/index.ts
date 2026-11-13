@@ -54,7 +54,7 @@ const STYLE = `
     width: 30px;
     height: 18px;
     border-radius: 9px;
-    background: var(--c-brand-3);
+    background: var(--c-brand-1);
 }
 .input-mode-switch__knob {
     position: absolute;
