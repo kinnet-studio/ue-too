@@ -12,13 +12,11 @@ import { RawUserInputPublisher } from '@ue-too/board';
 import { KonvaInputParser } from '@ue-too/board-konva-integration';
 import Konva from 'konva';
 
+import { fitToPage } from '../fit-to-page';
 import { followInputMode } from '../input-mode';
 
 const canvas = document.getElementById('graph') as HTMLCanvasElement;
-const camera = new DefaultBoardCamera({
-    viewPortWidth: 800,
-    viewPortHeight: 600,
-});
+const camera = new DefaultBoardCamera();
 
 const canvasProxy = new CanvasProxy(canvas);
 const cameraRig = createDefaultCameraRig(camera);
@@ -41,8 +39,13 @@ const kmtParser = new VanillaKMTEventParser(
 // first we need to create a stage
 const stage = new Konva.Stage({
     container: 'graph', // id of container <div>
-    width: 800,
-    height: 600,
+});
+
+// 800 × 600, or narrower on a phone
+fitToPage(800, 600, size => {
+    stage.size(size);
+    camera.viewPortWidth = size.width;
+    camera.viewPortHeight = size.height;
 });
 
 const konvaInputParser = new KonvaInputParser(

@@ -11,19 +11,20 @@ import {
 } from '@ue-too/board';
 import { PointCal } from '@ue-too/math';
 
+import { fitToPage } from '../fit-to-page';
 import { followInputMode } from '../input-mode';
 
 const svg = document.querySelector('#graph') as SVGSVGElement;
 
-const width = 800;
-const height = 600;
-svg.setAttribute('width', width.toString());
-svg.setAttribute('height', height.toString());
-svg.setAttribute('viewBox', `0 0 ${width} ${height}`);
+const camera = new DefaultBoardCamera();
 
-const camera = new DefaultBoardCamera({
-    viewPortWidth: width,
-    viewPortHeight: height,
+// 800 × 600, or narrower on a phone; one SVG unit stays one CSS pixel
+fitToPage(800, 600, ({ width, height }) => {
+    svg.setAttribute('width', width.toString());
+    svg.setAttribute('height', height.toString());
+    svg.setAttribute('viewBox', `0 0 ${width} ${height}`);
+    camera.viewPortWidth = width;
+    camera.viewPortHeight = height;
 });
 const cameraRig = createDefaultCameraRig(camera);
 const cameraMux = createCameraMuxWithAnimationAndLock();
