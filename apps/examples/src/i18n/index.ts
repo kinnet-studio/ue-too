@@ -91,7 +91,7 @@ export function createLanguageSwitcher(target: HTMLElement): HTMLSelectElement {
     const select = document.createElement('select');
     select.id = 'lang-switcher';
     select.style.cssText =
-        'padding: 4px 8px; border: 1px solid #ccc; border-radius: 4px; font-size: 13px; cursor: pointer; background: white;';
+        'padding: 4px 8px; border: 1px solid var(--c-border); border-radius: 4px; font-size: 13px; cursor: pointer; background: var(--c-bg); color: var(--c-text-1);';
 
     const labels: Record<string, string> = {
         en: 'English',

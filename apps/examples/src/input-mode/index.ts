@@ -44,7 +44,7 @@ const STYLE = `
     background: none;
     font: inherit;
     font-size: 13px;
-    color: #888;
+    color: var(--c-text-3);
     cursor: pointer;
     vertical-align: middle;
 }
@@ -54,7 +54,7 @@ const STYLE = `
     width: 30px;
     height: 18px;
     border-radius: 9px;
-    background: #007bff;
+    background: var(--c-brand-1);
 }
 .input-mode-switch__knob {
     position: absolute;
@@ -72,13 +72,13 @@ const STYLE = `
 }
 .input-mode-switch[aria-checked='false'] .input-mode-switch__kmt,
 .input-mode-switch[aria-checked='true'] .input-mode-switch__trackpad {
-    color: #222;
+    color: var(--c-text-1);
 }
 .input-mode-switch:focus-visible {
     outline: none;
 }
 .input-mode-switch:focus-visible .input-mode-switch__track {
-    outline: 2px solid #007bff;
+    outline: 2px solid var(--c-brand-1);
     outline-offset: 2px;
 }
 /* Most pages float the top bar over the title's row. With the switch in it,
