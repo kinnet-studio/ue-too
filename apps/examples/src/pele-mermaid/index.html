@@ -116,6 +116,10 @@
                 display: block;
                 flex: 1;
                 min-width: 0;
+                /* Explicit: in the phone (column) layout WebKit doesn't
+                   stretch an <svg> flex item, so it fell back to the SVG
+                   default width of 300px until something forced a relayout */
+                width: 100%;
                 height: 100%;
                 user-select: none;
                 -webkit-user-select: none;
