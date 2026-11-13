@@ -18,6 +18,7 @@ import {
 import { RawUserInputPublisher } from '@ue-too/board';
 import {
     CanvasProxy,
+    type KmtInputMode,
     ObservableInputTracker,
     createKmtInputStateMachine,
 } from '@ue-too/board';
@@ -53,6 +54,10 @@ export type InitAppOptions = {
     limitEntireViewPort: boolean;
     camera: DefaultBoardCamera;
     boundaries: { min: { x: number; y: number }; max: { x: number; y: number } };
+    /** The input device to start in: `'kmt'` (keyboard + mouse, the default;
+     *  a plain scroll wheel zooms) or `'trackpad'` (a two-finger swipe pans).
+     *  Switch later with `observableInputTracker.setMode`. */
+    inputMode: KmtInputMode;
 };
 
 export const baseInitApp = async (
@@ -64,6 +69,7 @@ export const baseInitApp = async (
         boundaries = { min: { x: -1000, y: -1000 }, max: { x: 1000, y: 1000 } },
         fullScreen = true,
         limitEntireViewPort = true,
+        inputMode = 'kmt',
         camera = new DefaultBoardCamera({
             viewPortWidth: canvasElement.width,
             viewPortHeight: canvasElement.height,
@@ -87,7 +93,10 @@ export const baseInitApp = async (
         cameraRig,
         new RawUserInputPublisher()
     );
-    const observableInputTracker = new ObservableInputTracker(canvasProxy);
+    const observableInputTracker = new ObservableInputTracker(
+        canvasProxy,
+        inputMode
+    );
     const touchInputTracker = new TouchInputTracker(canvasProxy);
 
     const touchInputStateMachine =
