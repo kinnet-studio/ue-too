@@ -142,6 +142,16 @@ export class KonvaInputParser {
     }
 
     keydownHandler(event: KeyboardEvent) {
+        // Space aimed at the page with the pointer over the stage starts
+        // Space + drag panning: keep the page from scrolling, on every key
+        // repeat too. Elsewhere, or typed into a field, Space is left alone.
+        if (
+            event.key === ' ' &&
+            event.target === document.body &&
+            this._stage.container().matches(':hover')
+        ) {
+            event.preventDefault();
+        }
         if (this._keyfirstPressed.has(event.key)) {
             return;
         }
