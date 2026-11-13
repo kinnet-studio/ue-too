@@ -158,6 +158,8 @@ const en = {
         'Pele renders Mermaid to SVG; the board camera transforms an SVG group around it, so the diagram stays sharp at any zoom.',
     'pele-mermaid.editor-label': 'Mermaid source',
     'pele-mermaid.fit': 'Fit',
+    'pele-mermaid.controls-touch':
+        '<strong>Touch:</strong> <kbd>One-finger drag</kbd> to pan, <kbd>Pinch</kbd> to zoom',
     'pele-mermaid.credit': 'Starting diagram: the gitGraph example from',
     'pele-mermaid.credit-link': 'the Pele playground',
     'pele-mermaid.controls-mouse':
