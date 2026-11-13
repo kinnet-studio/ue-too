@@ -17,7 +17,7 @@
 
 <p align="center">
   <a href="#overview">Overview</a> •
-  <a href="https://kinnet-studio.github.io/ue-too-documentation/">Documentation</a> •
+  <a href="https://ue-too.dev/">Documentation</a> •
   <a href="#packages">Packages</a> •
   <a href="#examples">Examples</a> •
   <a href="#development">Development</a>
@@ -61,30 +61,30 @@ npm install @ue-too/board @ue-too/math @ue-too/animate
 
 ## Examples
 
-A live website containing the examples is available [here](https://kinnet-studio.github.io/ue-too/).
+A live website containing the examples is available [here](https://examples.ue-too.dev/).
 
 This monorepo includes comprehensive examples demonstrating various packages and integrations:
 
 ### Core Examples
 
-- [**Base Example**](https://kinnet-studio.github.io/ue-too/base/) - Basic canvas viewport with pan, zoom, and rotate
-- [**Attach / Detach Example**](https://kinnet-studio.github.io/ue-too/attach-detach/) - Dynamically attach and detach a canvas from the board
-- [**Navigation Example**](https://kinnet-studio.github.io/ue-too/navigation/) - Keyboard-driven camera panning via `panByViewPort()`
-- [**Ruler Example**](https://kinnet-studio.github.io/ue-too/ruler/) - Measurement ruler overlay that updates with pan and zoom
-- [**Camera Animation**](https://kinnet-studio.github.io/ue-too/camera-animation/) - Click to fly the camera anywhere, or back to the start, along a smooth zoom-and-pan path
-- [**Image Example**](https://kinnet-studio.github.io/ue-too/image-example/) - Upload and display an image on the pannable canvas
-- [**SVG Example**](https://kinnet-studio.github.io/ue-too/svg/) - Board camera system applied to SVG elements
+- [**Base Example**](https://examples.ue-too.dev/base/) - Basic canvas viewport with pan, zoom, and rotate
+- [**Attach / Detach Example**](https://examples.ue-too.dev/attach-detach/) - Dynamically attach and detach a canvas from the board
+- [**Navigation Example**](https://examples.ue-too.dev/navigation/) - Keyboard-driven camera panning via `panByViewPort()`
+- [**Ruler Example**](https://examples.ue-too.dev/ruler/) - Measurement ruler overlay that updates with pan and zoom
+- [**Camera Animation**](https://examples.ue-too.dev/camera-animation/) - Click to fly the camera anywhere, or back to the start, along a smooth zoom-and-pan path
+- [**Image Example**](https://examples.ue-too.dev/image-example/) - Upload and display an image on the pannable canvas
+- [**SVG Example**](https://examples.ue-too.dev/svg/) - Board camera system applied to SVG elements
 
 ### Framework Integrations
 
-- [**PixiJS Integration**](https://kinnet-studio.github.io/ue-too/pixi-integration/) - Full-screen PixiJS canvas with board camera controls
-- [**Konva Integration**](https://kinnet-studio.github.io/ue-too/konva-integration/) - Konva.js stage synchronized with board camera transforms
-- [**Fabric Integration**](https://kinnet-studio.github.io/ue-too/fabric-integration/) - Fabric.js with toggleable movement/selection modes
+- [**PixiJS Integration**](https://examples.ue-too.dev/pixi-integration/) - Full-screen PixiJS canvas with board camera controls
+- [**Konva Integration**](https://examples.ue-too.dev/konva-integration/) - Konva.js stage synchronized with board camera transforms
+- [**Fabric Integration**](https://examples.ue-too.dev/fabric-integration/) - Fabric.js with toggleable movement/selection modes
 
 ### Advanced Features
 
-- [**Physics Example**](https://kinnet-studio.github.io/ue-too/physics/) - Four-bar linkage with rigid body physics and constraints
-- [**State Machine Visualizer**](https://kinnet-studio.github.io/ue-too/state-machine-visualizer/) - Live state chart, event log, and context inspector for `@ue-too/being` machines
+- [**Physics Example**](https://examples.ue-too.dev/physics/) - Four-bar linkage with rigid body physics and constraints
+- [**State Machine Visualizer**](https://examples.ue-too.dev/state-machine-visualizer/) - Live state chart, event log, and context inspector for `@ue-too/being` machines
 
 ### Running Examples
 

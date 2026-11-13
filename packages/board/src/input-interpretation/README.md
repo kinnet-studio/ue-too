@@ -22,11 +22,11 @@ The state machine manages different input states and transitions. Below are the 
 
 #### Keyboard, Mouse, and Trackpad Input
 
-![kmt-input-state-machine](https://kinnet-studio.github.io/ue-too/assets/doc-media/kmt-input-state-machine.png)
+![kmt-input-state-machine](https://examples.ue-too.dev/assets/doc-media/kmt-input-state-machine.png)
 
 #### Touch Input
 
-![touch-input-state-machine](https://kinnet-studio.github.io/ue-too/assets/doc-media/touch-input-state-machine.png)
+![touch-input-state-machine](https://examples.ue-too.dev/assets/doc-media/touch-input-state-machine.png)
 
 The default touch machine only handles two-finger gestures and leaves single touches to your UI. The board also ships an opt-in alternative where one finger pans and two fingers pinch-zoom (the midpoint of the two fingers pans at the same time, so the content stays under them):
 
@@ -38,7 +38,7 @@ IDLE ──1 finger──▶ PANNING ──2nd finger──▶ PINCHING
 
 Install it with `board.setTouchInputStateMachine(createOneFingerPanTouchInputStateMachine)`, or pass the machine to a `VanillaTouchEventParser` yourself. Switch back with `board.setTouchInputStateMachine(createTouchInputStateMachine)`.
 
-The diagrams above are snapshots; the [state machine visualizer example](https://kinnet-studio.github.io/ue-too/state-machine-visualizer/) charts these machines live — hold spacebar over the chart and watch the KMT input and pan-control machines transition as you pan.
+The diagrams above are snapshots; the [state machine visualizer example](https://examples.ue-too.dev/state-machine-visualizer/) charts these machines live — hold spacebar over the chart and watch the KMT input and pan-control machines transition as you pan.
 
 You can customize the state machine's behavior by defining relationships between states. The `@ue-too/being` library is used to implement the state machine. Please refer to the [being README](https://github.com/kinnet-studio/ue-too/tree/main/packages/being) for more details.
 
