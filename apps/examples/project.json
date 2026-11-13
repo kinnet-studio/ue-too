@@ -21,6 +21,13 @@
                 "command": "bun run build",
                 "cwd": "apps/examples"
             }
+        },
+        "test": {
+            "executor": "nx:run-commands",
+            "options": {
+                "command": "bun test",
+                "cwd": "apps/examples"
+            }
         }
     }
 }

@@ -25,6 +25,7 @@ import {
 import { Coordinator } from '@ue-too/ecs';
 import { Point, PointCal } from '@ue-too/math';
 
+import { followInputMode } from '../input-mode';
 import { InputSystem } from './input-system';
 
 // FPS tracking variables
@@ -34,6 +35,7 @@ let fpsElement: HTMLElement;
 
 let element = document.getElementById('graph') as HTMLCanvasElement;
 let board = new Board(element);
+followInputMode(mode => board.setInputMode(mode));
 board.camera.boundaries = {
     min: { x: -5000, y: -5000 },
     max: { x: 5000, y: 5000 },

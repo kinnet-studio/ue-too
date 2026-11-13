@@ -9,6 +9,8 @@ import {
 } from '@ue-too/board';
 import { Point } from '@ue-too/math';
 
+import { followInputMode } from '../input-mode';
+
 const tileImage = new Image();
 tileImage.src = new URL('./tile.png', import.meta.url).href;
 
@@ -17,6 +19,7 @@ const backButton = document.getElementById(
     'back-to-start'
 ) as HTMLButtonElement;
 const board = new Board(canvas);
+followInputMode(mode => board.setInputMode(mode));
 const cameraMux = board.cameraMux as CameraMuxWithAnimationAndLock;
 const cameraRig = board.getCameraRig();
 

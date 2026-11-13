@@ -4,6 +4,11 @@ const en = {
     'index.subtitle': 'Interactive examples and demos',
     'index.description': 'Explore different features and integrations below.',
 
+    // Input device picker (shown next to the language picker)
+    'input-mode.label': 'Input device',
+    'input-mode.kmt': 'Keyboard + Mouse',
+    'input-mode.trackpad': 'Trackpad',
+
     // Nav links
     'nav.base': 'Base',
     'nav.attach-detach': 'Attach / Detach',

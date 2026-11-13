@@ -1,7 +1,10 @@
 import { Board, drawArrow } from '@ue-too/board';
 
+import { followInputMode } from '../input-mode';
+
 const canvas = document.getElementById('graph') as HTMLCanvasElement;
 const board = new Board(canvas);
+followInputMode(mode => board.setInputMode(mode));
 
 let userImage: HTMLImageElement | null = null;
 

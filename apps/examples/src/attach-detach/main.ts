@@ -1,7 +1,10 @@
 import { Board } from '@ue-too/board';
 
+import { followInputMode } from '../input-mode';
+
 const canvas = document.getElementById('graph') as HTMLCanvasElement;
 const board = new Board();
+followInputMode(mode => board.setInputMode(mode));
 
 board.alignCoordinateSystem = false;
 

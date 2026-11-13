@@ -13,6 +13,8 @@ import {
 import { FabricInputEventParser } from '@ue-too/board-fabric-integration';
 import { Canvas, FabricText, Rect, TMat2D } from 'fabric';
 
+import { followInputMode } from '../input-mode';
+
 const canvas = document.getElementById('graph') as HTMLCanvasElement;
 const fabricCanvas = new Canvas('graph', { selection: false });
 const helloWorld = new FabricText('Hello world!', {
@@ -51,6 +53,7 @@ const inputOrchestrator = new InputOrchestrator(
     new RawUserInputPublisher()
 );
 const observableInputTracker = new ObservableInputTracker(canvasProxy);
+followInputMode(mode => observableInputTracker.setMode(mode));
 const kmtInputStateMachine = createKmtInputStateMachine(observableInputTracker);
 const kmtParser = new VanillaKMTEventParser(
     kmtInputStateMachine,

@@ -4,6 +4,11 @@ const zhTW = {
     'index.subtitle': '互動式範例與 demo ',
     'index.description': '探索以下各種功能與整合範例。',
 
+    // Input device picker (shown next to the language picker)
+    'input-mode.label': '輸入裝置',
+    'input-mode.kmt': '鍵盤與滑鼠',
+    'input-mode.trackpad': '觸控板',
+
     // Nav links
     'nav.base': '基本',
     'nav.attach-detach': '掛載 / 卸載',

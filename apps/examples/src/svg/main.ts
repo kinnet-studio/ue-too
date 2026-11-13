@@ -11,6 +11,8 @@ import {
 } from '@ue-too/board';
 import { PointCal } from '@ue-too/math';
 
+import { followInputMode } from '../input-mode';
+
 const svg = document.querySelector('#graph') as SVGSVGElement;
 
 const width = 800;
@@ -27,6 +29,7 @@ const cameraRig = createDefaultCameraRig(camera);
 const cameraMux = createCameraMuxWithAnimationAndLock();
 
 const observableInputTracker = new ObservableInputTracker(new SvgProxy(svg));
+followInputMode(mode => observableInputTracker.setMode(mode));
 
 const kmtInputStateMachine = createKmtInputStateMachine(observableInputTracker);
 

@@ -12,6 +12,8 @@ import { RawUserInputPublisher } from '@ue-too/board';
 import { KonvaInputParser } from '@ue-too/board-konva-integration';
 import Konva from 'konva';
 
+import { followInputMode } from '../input-mode';
+
 const canvas = document.getElementById('graph') as HTMLCanvasElement;
 const camera = new DefaultBoardCamera({
     viewPortWidth: 800,
@@ -26,6 +28,7 @@ const inputOrchestrator = new InputOrchestrator(
     new RawUserInputPublisher()
 );
 const observableInputTracker = new ObservableInputTracker(canvasProxy);
+followInputMode(mode => observableInputTracker.setMode(mode));
 const kmtInputStateMachine = createKmtInputStateMachine(observableInputTracker);
 const kmtParser = new VanillaKMTEventParser(
     kmtInputStateMachine,

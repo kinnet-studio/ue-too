@@ -57,6 +57,7 @@ export function getAvailableLanguages(): string[] {
  * - `data-i18n` sets textContent
  * - `data-i18n-title` sets the document title
  * - `data-i18n-placeholder` sets placeholder attribute
+ * - `data-i18n-aria-label` sets the aria-label attribute
  * - `data-i18n-html` sets innerHTML (use sparingly)
  */
 export function applyTranslations(): void {
@@ -75,6 +76,10 @@ export function applyTranslations(): void {
     document.querySelectorAll<HTMLElement>('[data-i18n-placeholder]').forEach(el => {
         const key = el.getAttribute('data-i18n-placeholder') as TranslationKey;
         if (key) (el as HTMLInputElement).placeholder = t(key);
+    });
+    document.querySelectorAll<HTMLElement>('[data-i18n-aria-label]').forEach(el => {
+        const key = el.getAttribute('data-i18n-aria-label') as TranslationKey;
+        if (key) el.setAttribute('aria-label', t(key));
     });
 }
 

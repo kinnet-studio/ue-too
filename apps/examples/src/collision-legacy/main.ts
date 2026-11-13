@@ -14,8 +14,11 @@ import {
 } from '@ue-too/dynamics';
 import { Point, PointCal } from '@ue-too/math';
 
+import { followInputMode } from '../input-mode';
+
 let element = document.getElementById('graph') as HTMLCanvasElement;
 let board = new Board(element);
+followInputMode(mode => board.setInputMode(mode));
 board.fullScreen = true;
 let keyController: Map<string, boolean>;
 keyController = new Map<string, boolean>();

@@ -14,6 +14,7 @@ import {
     createZoomPanPath,
 } from '@ue-too/board';
 
+import { followInputMode } from '../input-mode';
 import { DIAGRAM_FONT, DiagramResult, renderDiagram } from './diagram';
 import { MAX_ZOOM, MIN_ZOOM, fitView } from './fit';
 import { enableLinkTaps } from './link-taps';
@@ -53,8 +54,10 @@ proxy.subscribe(({ width, height }) => {
 
 // Mouse, keyboard, trackpad and touch all drive the same camera
 const orchestrator = new InputOrchestrator(cameraMux, cameraRig);
+const kmtInputTracker = new ObservableInputTracker(proxy);
+followInputMode(mode => kmtInputTracker.setMode(mode));
 const kmtParser = new VanillaKMTEventParser(
-    createKmtInputStateMachine(new ObservableInputTracker(proxy)),
+    createKmtInputStateMachine(kmtInputTracker),
     orchestrator,
     stage
 );
