@@ -164,6 +164,9 @@ export class FabricInputEventParser {
             return;
         }
         const nativeEvent = event.e;
+        // The wheel drives the camera: don't also scroll the page, and don't
+        // let a pinch (Ctrl + wheel) zoom the whole browser page.
+        nativeEvent.preventDefault();
         if (nativeEvent.ctrlKey) {
             this.processEvent('scrollWithCtrl', {
                 x: nativeEvent.clientX,
