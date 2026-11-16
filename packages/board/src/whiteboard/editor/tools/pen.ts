@@ -16,8 +16,10 @@ export type PenStates = 'IDLE' | 'DRAWING';
 
 // Points closer than this on screen add nothing a hand can draw
 const MIN_STEP_PX = 0.5;
-// How far, in world units, a point may stray before simplification keeps it
-const SIMPLIFY_TOLERANCE = 0.5;
+// How far, in screen px, a point may stray from the finished stroke before
+// simplification keeps it: under half a pixel, the stroke doesn't visibly
+// change when the pen lifts
+const SIMPLIFY_TOLERANCE_PX = 0.5;
 
 /**
  * The pen: drag to draw a stroke; a tap leaves a dot. The pen stays picked.
@@ -76,7 +78,7 @@ export function createPenTool(context: ToolContext): ToolMachine<PenStates> {
                                 points: roundPoints(
                                     simplifyPoints(
                                         stroke.points,
-                                        SIMPLIFY_TOLERANCE
+                                        SIMPLIFY_TOLERANCE_PX / ctx.zoom()
                                     )
                                 ),
                             });
