@@ -126,6 +126,27 @@ describe('sketchShape', () => {
         expect(parts.map(p => [p.kind, p.role])).toEqual([['fill', 'paper']]);
     });
 
+    it('a pen stroke runs straight through every point, unsmoothed', () => {
+        const ops = sketchShape(
+            pen('p', {
+                x: 10,
+                y: 20,
+                points: [
+                    [0, 0],
+                    [40, 60],
+                    [80, 0],
+                    [80, 1],
+                ],
+            })
+        )[0]!.ops;
+        expect(ops).toEqual([
+            ['M', 10, 20],
+            ['L', 50, 80],
+            ['L', 90, 20],
+            ['L', 90, 21],
+        ]);
+    });
+
     it('a one-point pen stroke still draws', () => {
         const ops = sketchShape(pen('p', { points: [[0, 0]] }))[0]!.ops;
         expect(ops.length).toBe(2);
