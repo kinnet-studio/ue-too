@@ -81,3 +81,10 @@ export const text = (id: string, o: Partial<TextShape> = {}): TextShape => ({
     text: 'Hi',
     ...o,
 });
+
+// A text measure that needs no canvas: each character is half the font size wide
+export const env = {
+    measure: (value: string, font: string) =>
+        value.length * parseFloat(font.split(' ')[1]!) * 0.5,
+    family: 'Hand',
+};
