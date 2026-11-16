@@ -32,6 +32,7 @@ export * from './editor/events';
 export * from './editor/pointer-input';
 export * from './editor/selection';
 export * from './editor/text-input';
+export * from './editor/keyboard';
 export {
     type EditorBackground,
     type ToolContext,

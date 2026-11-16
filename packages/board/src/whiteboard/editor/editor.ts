@@ -33,6 +33,7 @@ import {
     type ToolEvents,
     type ToolName,
 } from './events';
+import { type KeyLike, shortcutFor } from './keyboard';
 import { PointerInput } from './pointer-input';
 import { Selection, handlesFor, selectionBox } from './selection';
 import { DomTextInput, type TextInput } from './text-input';
@@ -328,6 +329,68 @@ export class Editor {
         this.history.redo();
     }
 
+    /**
+     * Sets the style the next shape gets, and restyles the selected shapes
+     * (as one undo step)
+     */
+    setStyle(style: Partial<ShapeStyle>): void {
+        this._style = { ...this._style, ...style };
+        const selected = this.selectedShapes();
+        if (selected.length > 0) {
+            this.document.put(
+                selected.map(shape => ({
+                    ...shape,
+                    style: { ...shape.style, ...style },
+                }))
+            );
+        }
+        this.emit();
+    }
+
+    /** Removes every shape, as one undo step */
+    clear(): void {
+        this.cancelGesture();
+        if (this.document.size === 0) return;
+        this.document.remove(this.document.all().map(shape => shape.id));
+    }
+
+    /**
+     * Runs the shortcut a key press stands for (see `shortcutFor`). The
+     * editor calls it for key presses on the canvas's window; call it
+     * yourself for other key sources.
+     *
+     * @returns Whether the key was handled (its default is then prevented)
+     */
+    handleKey(event: KeyLike & { preventDefault(): void }): boolean {
+        if (this._editingId !== null) return false;
+        const command = shortcutFor(event);
+        if (!command) return false;
+        switch (command.type) {
+            case 'tool':
+                this.setTool(command.tool);
+                break;
+            case 'delete':
+                if (this._selection.ids.length === 0) return false;
+                this.deleteSelection();
+                break;
+            case 'escape':
+                if (this.input.pressed) this.cancelGesture();
+                else this._selection.clear();
+                break;
+            case 'undo':
+                this.undo();
+                break;
+            case 'redo':
+                this.redo();
+                break;
+            case 'selectAll':
+                this.selectAll();
+                break;
+        }
+        event.preventDefault();
+        return true;
+    }
+
     /** Deletes the selected shapes, as one undo step */
     deleteSelection(): void {
         this.cancelGesture();
@@ -370,6 +433,20 @@ export class Editor {
         };
     }
 
+    /** The style values every selected shape shares, or null with none selected */
+    protected sharedStyle(): Partial<ShapeStyle> | null {
+        const shapes = this.selectedShapes();
+        if (shapes.length === 0) return null;
+        const shared: Partial<ShapeStyle> = {};
+        for (const key of ['color', 'size', 'fill'] as const) {
+            const value = shapes[0]!.style[key];
+            if (shapes.every(shape => shape.style[key] === value)) {
+                (shared as Record<string, unknown>)[key] = value;
+            }
+        }
+        return shared;
+    }
+
     /** The selected shapes, in selection order */
     protected selectedShapes(): Shape[] {
         return this._selection.ids
@@ -382,7 +459,7 @@ export class Editor {
             tool: this.tool,
             selection: this._selection.ids,
             style: { ...this._style },
-            selectionStyle: null,
+            selectionStyle: this.sharedStyle(),
             canUndo: this.history.canUndo,
             canRedo: this.history.canRedo,
             empty: this.document.size === 0,
@@ -712,6 +789,8 @@ export class Editor {
         canvas.addEventListener('pointercancel', cancel);
         canvas.addEventListener('lostpointercapture', lost);
         canvas.addEventListener('touchmove', touchMove, { passive: true });
+        const keyDown = (e: KeyboardEvent) => this.handleKey(e);
+        view?.addEventListener('keydown', keyDown);
         view?.addEventListener('blur', cancel);
         this._cleanup.push(() => {
             canvas.removeEventListener('pointerdown', down);
@@ -720,6 +799,7 @@ export class Editor {
             canvas.removeEventListener('pointercancel', cancel);
             canvas.removeEventListener('lostpointercapture', lost);
             canvas.removeEventListener('touchmove', touchMove);
+            view?.removeEventListener('keydown', keyDown);
             view?.removeEventListener('blur', cancel);
         });
         this.applyCursor();
