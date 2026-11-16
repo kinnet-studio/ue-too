@@ -46,6 +46,18 @@ data.exports = {
     './package.json': './package.json',
 };
 
+// Extra public entries, built next to the main one (e.g. board's
+// `@ue-too/board/whiteboard`): `publishEntries: ["whiteboard"]` publishes
+// `./whiteboard` from `whiteboard/index.js`
+for (const name of data.publishEntries ?? []) {
+    data.exports[`./${name}`] = {
+        types: `./${name}/index.d.ts`,
+        import: `./${name}/index.js`,
+        default: `./${name}/index.js`,
+    };
+}
+delete data.publishEntries;
+
 if (isDryRun) {
     data.version = '0.0.0';
 }

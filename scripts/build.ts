@@ -108,6 +108,26 @@ if (!result.success) {
             console.log('Browser bundle created: index.browser.js');
         }
 
+        // Further entry points (e.g. dist/whiteboard/index.js) get the same fix
+        for (const output of result.outputs) {
+            if (!output.path.endsWith('.js') || output.path === jsFilePath) {
+                continue;
+            }
+            const mapPath = `${output.path}.map`;
+            const map = JSON.parse(readFileSync(mapPath, 'utf-8'));
+            if (map.sources && Array.isArray(map.sources)) {
+                map.sources = map.sources.map((source: string) =>
+                    basename(source)
+                );
+            }
+            writeFileSync(mapPath, JSON.stringify(map, null, 2));
+            let content = readFileSync(output.path, 'utf-8');
+            if (!content.includes('sourceMappingURL')) {
+                content += `\n//# sourceMappingURL=${basename(mapPath)}`;
+                writeFileSync(output.path, content);
+            }
+        }
+
         console.log('Source map paths fixed');
     } catch (error) {
         console.warn('Could not fix source map (file may not exist):', error);

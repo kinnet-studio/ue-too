@@ -15,7 +15,7 @@
             ],
             "executor": "nx:run-commands",
             "options": {
-                "command": "rm -rf dist && bun run ../../scripts/build.ts --external @ue-too/math --external @ue-too/being",
+                "command": "rm -rf dist && bun run ../../scripts/build.ts --entrypoints ./src/index.ts --entrypoints ./src/whiteboard/index.ts --external @ue-too/math --external @ue-too/being --external @ue-too/board",
                 "cwd": "packages/board"
             }
         },
@@ -28,7 +28,7 @@
             ],
             "executor": "nx:run-commands",
             "options": {
-                "command": "rm -rf dist && bun run ../../scripts/build.ts --external @ue-too/math --external @ue-too/being",
+                "command": "rm -rf dist && bun run ../../scripts/build.ts --entrypoints ./src/index.ts --entrypoints ./src/whiteboard/index.ts --external @ue-too/math --external @ue-too/being --external @ue-too/board",
                 "cwd": "packages/board"
             }
         },
