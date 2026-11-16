@@ -1,3 +1,14 @@
+## 0.21.1 (2026-11-16)
+
+### 🩹 Fixes
+
+- **board:** keep whiteboard pen strokes as drawn when the pen lifts ([#477](https://github.com/kinnet-studio/ue-too/pull/477), [#478](https://github.com/kinnet-studio/ue-too/pull/478))
+
+### ❤️ Thank You
+
+- Claude
+- vee @niuee
+
 ## 0.21.0 (2026-11-16)
 
 ### 🚀 Features
