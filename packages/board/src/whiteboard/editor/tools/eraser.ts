@@ -8,7 +8,12 @@ import {
     createToolMachine,
 } from '../tool-context';
 
-type EraserStates = 'IDLE' | 'ERASING';
+/**
+ * The eraser's states.
+ *
+ * @group Whiteboard Editor
+ */
+export type EraserStates = 'IDLE' | 'ERASING';
 
 /** Marks every shape the path from `from` to `to` touches, sampled finely enough not to skip any */
 function markAlong(context: ToolContext, from: Point, to: Point): void {

@@ -9,7 +9,12 @@ import {
 } from '../tool-context';
 import { cancelGesture, newShape } from './shared';
 
-type SegmentStates = 'IDLE' | 'CREATING';
+/**
+ * The arrow and line tools' states.
+ *
+ * @group Whiteboard Editor
+ */
+export type SegmentStates = 'IDLE' | 'CREATING';
 
 // A click without a drag makes a segment this long, pointing right
 const DEFAULT_LENGTH = 160;

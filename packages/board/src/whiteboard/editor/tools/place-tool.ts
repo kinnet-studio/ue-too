@@ -12,7 +12,12 @@ import {
 } from '../tool-context';
 import { newShape } from './shared';
 
-type PlaceStates = 'IDLE' | 'PRESSED';
+/**
+ * The text and note tools' states.
+ *
+ * @group Whiteboard Editor
+ */
+export type PlaceStates = 'IDLE' | 'PRESSED';
 
 /**
  * The text and sticky-note tools: a click places an empty text box (its

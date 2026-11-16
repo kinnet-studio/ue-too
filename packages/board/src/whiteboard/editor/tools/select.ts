@@ -19,7 +19,12 @@ import {
 import { activateBackground } from './hand';
 import { cancelGesture } from './shared';
 
-type SelectStates =
+/**
+ * The select tool's states.
+ *
+ * @group Whiteboard Editor
+ */
+export type SelectStates =
     | 'IDLE'
     | 'POINTING_SHAPE'
     | 'MOVING'

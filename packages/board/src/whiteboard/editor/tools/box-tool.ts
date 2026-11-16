@@ -10,7 +10,12 @@ import {
 } from '../tool-context';
 import { cancelGesture, newShape } from './shared';
 
-type BoxStates = 'IDLE' | 'CREATING';
+/**
+ * The rectangle and ellipse tools' states.
+ *
+ * @group Whiteboard Editor
+ */
+export type BoxStates = 'IDLE' | 'CREATING';
 
 // A click without a drag makes a shape this size, centred on the click
 const DEFAULT_WIDTH = 160;

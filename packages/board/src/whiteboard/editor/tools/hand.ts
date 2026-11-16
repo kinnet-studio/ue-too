@@ -6,7 +6,12 @@ import {
     createToolMachine,
 } from '../tool-context';
 
-type HandStates = 'IDLE' | 'PRESSED' | 'PANNING';
+/**
+ * The hand tool's states.
+ *
+ * @group Whiteboard Editor
+ */
+export type HandStates = 'IDLE' | 'PRESSED' | 'PANNING';
 
 /**
  * A click with no shape on top activates whatever the app put underneath.

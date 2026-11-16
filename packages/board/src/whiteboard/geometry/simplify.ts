@@ -1,6 +1,11 @@
-type Pair = [number, number];
+/**
+ * A point as an `[x, y]` pair, as pen strokes store them.
+ *
+ * @group Whiteboard Geometry
+ */
+export type PointPair = [number, number];
 
-function distanceToLine(p: Pair, a: Pair, b: Pair): number {
+function distanceToLine(p: PointPair, a: PointPair, b: PointPair): number {
     const dx = b[0] - a[0];
     const dy = b[1] - a[1];
     const length = Math.hypot(dx, dy);
@@ -17,7 +22,10 @@ function distanceToLine(p: Pair, a: Pair, b: Pair): number {
  *
  * @group Whiteboard Geometry
  */
-export function simplifyPoints(points: Pair[], tolerance: number): Pair[] {
+export function simplifyPoints(
+    points: PointPair[],
+    tolerance: number
+): PointPair[] {
     if (points.length < 3) return points.slice();
     const keep = new Uint8Array(points.length);
     keep[0] = 1;
@@ -58,7 +66,7 @@ function round(value: number, factor: number): number {
  *
  * @group Whiteboard Geometry
  */
-export function roundPoints(points: Pair[], decimals = 2): Pair[] {
+export function roundPoints(points: PointPair[], decimals = 2): PointPair[] {
     const factor = 10 ** decimals;
     return points.map(([x, y]) => [round(x, factor), round(y, factor)]);
 }

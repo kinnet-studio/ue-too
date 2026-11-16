@@ -7,7 +7,12 @@ import {
 } from '../tool-context';
 import { cancelGesture, newShape } from './shared';
 
-type PenStates = 'IDLE' | 'DRAWING';
+/**
+ * The pen's states.
+ *
+ * @group Whiteboard Editor
+ */
+export type PenStates = 'IDLE' | 'DRAWING';
 
 // Points closer than this on screen add nothing a hand can draw
 const MIN_STEP_PX = 0.5;

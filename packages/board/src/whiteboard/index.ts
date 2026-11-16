@@ -48,11 +48,18 @@ export {
     type EditorMachineContext,
     createEditorMachine,
 } from './editor/editor-machine';
-export { activateBackground, createHandTool } from './editor/tools/hand';
-export { createBoxTool } from './editor/tools/box-tool';
-export { createSegmentTool } from './editor/tools/segment-tool';
-export { createPenTool } from './editor/tools/pen';
-export { createSelectTool } from './editor/tools/select';
-export { createEraserTool } from './editor/tools/eraser';
-export { createPlaceTool } from './editor/tools/place-tool';
+export {
+    type HandStates,
+    activateBackground,
+    createHandTool,
+} from './editor/tools/hand';
+export { type BoxStates, createBoxTool } from './editor/tools/box-tool';
+export {
+    type SegmentStates,
+    createSegmentTool,
+} from './editor/tools/segment-tool';
+export { type PenStates, createPenTool } from './editor/tools/pen';
+export { type SelectStates, createSelectTool } from './editor/tools/select';
+export { type EraserStates, createEraserTool } from './editor/tools/eraser';
+export { type PlaceStates, createPlaceTool } from './editor/tools/place-tool';
 export { Editor, type EditorOptions, type EditorState } from './editor/editor';
