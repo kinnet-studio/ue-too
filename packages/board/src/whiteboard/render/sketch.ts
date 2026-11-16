@@ -228,51 +228,24 @@ function hachure(
     return ops;
 }
 
-function smooth(points: Pair[]): Pair[] {
-    return points.map((p, i) => {
-        const a = points[Math.max(0, i - 1)]!;
-        const c = points[Math.min(points.length - 1, i + 1)]!;
-        return [(a[0] + 2 * p[0] + c[0]) / 4, (a[1] + 2 * p[1] + c[1]) / 4];
-    });
-}
-
-// A smoothed stroke through the pen's points, joined by midpoints; a hand
-// stroke is already hand-drawn, so no wobble is added
+// The pen's stroke, straight through every point it was drawn through: the
+// points are what the hand drew (dense while drawing, thinned to within half
+// a screen pixel when it ends), so no smoothing or wobble is added, and the
+// stroke doesn't change shape when the pen lifts
 function penOps(shape: Extract<Shape, { type: 'pen' }>): PathOp[] {
-    const points = smooth(
-        shape.points.map(([x, y]): Pair => [shape.x + x, shape.y + y])
+    const [first, ...rest] = shape.points.map(
+        ([x, y]): Pair => [shape.x + x, shape.y + y]
     );
-    const first = points[0]!;
-    if (points.length === 1) {
+    if (rest.length === 0) {
         return [
-            ['M', first[0], first[1]],
-            ['L', first[0] + 0.01, first[1]],
+            ['M', first![0], first![1]],
+            ['L', first![0] + 0.01, first![1]],
         ];
     }
-    const ops: PathOp[] = [['M', first[0], first[1]]];
-    let current = first;
-    for (let i = 1; i < points.length - 1; i++) {
-        const control = points[i]!;
-        const next = points[i + 1]!;
-        const end: Pair = [
-            (control[0] + next[0]) / 2,
-            (control[1] + next[1]) / 2,
-        ];
-        // A quadratic through `control`, written as the matching cubic
-        ops.push([
-            'C',
-            current[0] + ((control[0] - current[0]) * 2) / 3,
-            current[1] + ((control[1] - current[1]) * 2) / 3,
-            end[0] + ((control[0] - end[0]) * 2) / 3,
-            end[1] + ((control[1] - end[1]) * 2) / 3,
-            end[0],
-            end[1],
-        ]);
-        current = end;
-    }
-    const last = points[points.length - 1]!;
-    ops.push(['L', last[0], last[1]]);
-    return ops;
+    return [
+        ['M', first![0], first![1]],
+        ...rest.map(([x, y]): PathOp => ['L', x, y]),
+    ];
 }
 
 function boxCorners(box: Box): Pair[] {

@@ -247,9 +247,9 @@ interface ShapeBase {
   shapes or fields are dropped, a wrong schema throws. This is what the docs
   page saves.
 - **Size.** Pen strokes drop points closer than half a screen pixel while
-  drawing, are simplified (Ramer–Douglas–Peucker, ~0.5 world units) when the
-  stroke ends, and coordinates are rounded to two decimals, so a busy board stays
-  well inside localStorage's few megabytes.
+  drawing, are simplified (Ramer–Douglas–Peucker, 0.5 screen px at the drawing
+  zoom) when the stroke ends, and coordinates are rounded to two decimals, so a
+  busy board stays well inside localStorage's few megabytes.
 
 ### Rendering
 
@@ -263,8 +263,9 @@ interface ShapeBase {
   is two slightly offset, slightly bowed Bézier strokes; ellipses are a jittered
   closed curve drawn twice with an overlap; `hachure` fills are clipped
   parallel strokes at about -41°; `solid` fills a jittered outline; arrows add
-  two short head strokes; pen strokes are smoothed with constant width (no
-  wobble added: a hand stroke is already hand-drawn); notes are a slightly
+  two short head strokes; pen strokes run straight through their points with
+  constant width (no smoothing or wobble: a hand stroke is already
+  hand-drawn, and it must not change shape when the pen lifts); notes are a slightly
   jittered paper square with a small tilt taken from the seed (drawn only; hit
   testing uses the untilted box). A seeded random generator makes the output a
   pure function of the record, as in the mockup.
