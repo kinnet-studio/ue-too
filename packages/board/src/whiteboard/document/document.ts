@@ -1,4 +1,10 @@
 import { compareShapes, indexBetween } from './fractional-index';
+import {
+    SNAPSHOT_SCHEMA,
+    SNAPSHOT_VERSION,
+    type Snapshot,
+    parseSnapshot,
+} from './snapshot';
 import type { Change, ChangeSource, Shape } from './types';
 
 interface Pending {
@@ -129,6 +135,25 @@ export class WhiteboardDocument {
         } finally {
             this._source = 'local';
         }
+    }
+
+    /** The whole document as plain JSON, records in stacking order */
+    toSnapshot(): Snapshot {
+        return {
+            schema: SNAPSHOT_SCHEMA,
+            version: SNAPSHOT_VERSION,
+            records: [...this.all()],
+        };
+    }
+
+    /**
+     * A document holding a snapshot's records.
+     *
+     * @throws {@link SnapshotError} when `json` isn't a snapshot this version
+     * can read (see {@link parseSnapshot})
+     */
+    static fromSnapshot(json: unknown): WhiteboardDocument {
+        return new WhiteboardDocument(parseSnapshot(json));
     }
 
     /** A stacking key above every record, for a new shape on top */
