@@ -26,15 +26,14 @@ const zhTW = {
     'card.base.title': '基本範例',
     'card.base.desc':
         '基本畫布，具備平移、縮放與旋轉功能。是理解核心功能的最佳起點。',
-    'card.attach-detach.title': '掛載 / 卸載範例 (使 canvas 視窗範圍受 Board 控制)',
+    'card.attach-detach.title':
+        '掛載 / 卸載範例 (使 canvas 視窗範圍受 Board 控制)',
     'card.attach-detach.desc':
         '展示如何在執行時動態掛載與卸載 canvas（使其視窗範圍受 Board 控制）。',
     'card.ruler.title': '尺規範例',
-    'card.ruler.desc':
-        '尺規覆蓋層與測量工具。展示如何新增測量與格線覆蓋層。',
+    'card.ruler.desc': '尺規覆蓋層與測量工具。展示如何新增測量與格線覆蓋層。',
     'card.navigation.title': '使用鍵盤控制鏡頭範例',
-    'card.navigation.desc':
-        '展示如何使用鍵盤控制鏡頭。',
+    'card.navigation.desc': '展示如何使用鍵盤控制鏡頭。',
     'card.pixi.title': 'Pixi 整合',
     'card.pixi.desc':
         '與 PixiJS 整合。展示如何搭配 uē-tôo 與 PixiJS 實現高效能圖形。',
@@ -56,24 +55,17 @@ const zhTW = {
     'card.state-machine.desc':
         '互動式狀態機視覺化與模擬器，使用 @ue-too/board 繪製 @ue-too/being 狀態機。',
     'card.image.title': '圖片範例',
-    'card.image.desc':
-        '圖片操作範例。展示如何在 uē-tôo 中使用圖片。',
+    'card.image.desc': '圖片操作範例。展示如何在 uē-tôo 中使用圖片。',
     'card.physics.title': '物理範例',
-    'card.physics.desc':
-        '物理範例。展示如何在 uē-tôo 中使用物理引擎。',
+    'card.physics.desc': '物理範例。展示如何在 uē-tôo 中使用物理引擎。',
     'card.view': '查看範例',
 
     // Shared control instructions (HTML)
-    'controls.scroll-zoom':
-        '<kbd>滾輪</kbd> 縮放',
-    'controls.scroll-zoom-short':
-        '<kbd>滾輪</kbd> 縮放',
-    'controls.scroll-zoom-image':
-        '<kbd>滾輪</kbd> 縮放圖片',
-    'controls.scroll-zoom-ruler':
-        '<kbd>滾輪</kbd> 縮放——觀察尺規刻度的變化',
-    'controls.pan':
-        '<kbd>中鍵拖曳</kbd> 或 <kbd>空白鍵 + 左鍵拖曳</kbd> 平移',
+    'controls.scroll-zoom': '<kbd>滾輪</kbd> 縮放',
+    'controls.scroll-zoom-short': '<kbd>滾輪</kbd> 縮放',
+    'controls.scroll-zoom-image': '<kbd>滾輪</kbd> 縮放圖片',
+    'controls.scroll-zoom-ruler': '<kbd>滾輪</kbd> 縮放——觀察尺規刻度的變化',
+    'controls.pan': '<kbd>中鍵拖曳</kbd> 或 <kbd>空白鍵 + 左鍵拖曳</kbd> 平移',
     'controls.pan-viewport':
         '<kbd>中鍵拖曳</kbd> 或 <kbd>空白鍵 + 左鍵拖曳</kbd> 平移視窗',
     'controls.pan-around':
@@ -95,8 +87,7 @@ const zhTW = {
     'base.title': '基本範例',
     'base.desc':
         '最簡單的設定：將 Board 掛載至畫布，即可使用內建的平移、縮放與旋轉功能。',
-    'base.click-log':
-        '<kbd>點擊</kbd> 畫布以在主控台記錄世界座標',
+    'base.click-log': '<kbd>點擊</kbd> 畫布以在主控台記錄世界座標',
 
     // Attach/Detach example
     'attach-detach.title': '掛載 / 卸載範例',
@@ -128,8 +119,7 @@ const zhTW = {
     'camera-animation.title': '鏡頭動畫',
     'camera-animation.desc':
         '使用 <code>@ue-too/board</code> 的 <code>createZoomPanPath</code>，搭配 <code>@ue-too/animate</code> 驅動平滑的鏡頭飛行。距離較遠時，鏡頭會先拉遠、滑過去，再拉近。',
-    'camera-animation.click':
-        '<kbd>點擊</kbd> 任意位置，鏡頭將飛到該處',
+    'camera-animation.click': '<kbd>點擊</kbd> 任意位置，鏡頭將飛到該處',
     'camera-animation.back':
         '<strong>回到起點</strong> 讓鏡頭飛回一開始的位置（橘色十字標記處）',
     'camera-animation.interrupt': '飛行途中平移或縮放即可接手鏡頭',
@@ -141,16 +131,14 @@ const zhTW = {
     'image.desc':
         '上傳圖片以在可平移縮放的畫布上繪製。原點處的彩色座標軸箭頭（紅色 = Y，綠色 = X）顯示世界座標方向。',
     'image.choose': '選擇圖片',
-    'image.upload':
-        '點擊<strong>選擇圖片</strong>以上傳檔案',
+    'image.upload': '點擊<strong>選擇圖片</strong>以上傳檔案',
 
     // SVG example
     'svg.title': 'SVG 範例',
     'svg.desc':
         '使用 Board 鏡頭系統搭配 SVG 元素而非畫布。鏡頭變換（平移、縮放、旋轉）會套用至 SVG <code>&lt;g&gt;</code> 群組。',
     'svg.inputs': '使用以下欄位設定鏡頭位置、旋轉角度與縮放等級',
-    'svg.click-log':
-        '<kbd>點擊</kbd> 以在主控台記錄視窗與世界座標',
+    'svg.click-log': '<kbd>點擊</kbd> 以在主控台記錄視窗與世界座標',
     'svg.rotation': '旋轉',
     'svg.zoom': '縮放',
     'svg.apply': '套用',
@@ -170,15 +158,13 @@ const zhTW = {
     'pixi.title': 'PixiJS 整合',
     'pixi.desc':
         '全螢幕 PixiJS 畫布搭配 uē-tôo 鏡頭控制。使用 PixiJS 繪製兔子精靈圖與圓形，同時由 Board 鏡頭處理視窗變換。',
-    'pixi.camera-info':
-        '鏡頭起始位置 (100, 100)，2 倍縮放，45 度旋轉',
+    'pixi.camera-info': '鏡頭起始位置 (100, 100)，2 倍縮放，45 度旋轉',
 
     // Konva example
     'konva.title': 'Konva 整合',
     'konva.desc':
         '將 uē-tôo 鏡頭控制與 Konva.js 整合。使用 Konva 繪製紅色圓形，Board 鏡頭每幀將平移、旋轉與縮放變換套用至 Konva 舞台。',
-    'konva.sync':
-        'Konva 舞台變換每幀與鏡頭同步',
+    'konva.sync': 'Konva 舞台變換每幀與鏡頭同步',
 
     // Fabric example
     'fabric.title': 'Fabric.js 整合',
@@ -195,10 +181,45 @@ const zhTW = {
     'physics.title': '物理範例',
     'physics.desc':
         '以剛體物理與銷接約束模擬的四連桿機構。兩根驅動連桿固定在定點，透過三角連桿相連。',
-    'physics.arrows':
-        '<kbd>方向鍵</kbd> 對左連桿施加力',
-    'physics.qe':
-        '<kbd>Q</kbd> / <kbd>E</kbd> 旋轉左連桿',
+    'physics.arrows': '<kbd>方向鍵</kbd> 對左連桿施加力',
+    'physics.qe': '<kbd>Q</kbd> / <kbd>E</kbd> 旋轉左連桿',
+
+    // Whiteboard example
+    'nav.whiteboard': '白板',
+    'card.whiteboard.title': '白板',
+    'card.whiteboard.desc':
+        '用 @ue-too/board/whiteboard 在無限畫布上畫形狀、箭頭、筆跡、文字和便利貼。',
+    'whiteboard.title': '白板',
+    'whiteboard.desc':
+        '用 <code>@ue-too/board/whiteboard</code> 在無限畫布上畫形狀、箭頭、筆跡、文字和便利貼。',
+    'whiteboard.hint':
+        '從下方選一個工具，或按它的字母鍵。空白鍵加拖曳或滑鼠中鍵拖曳可平移，滾輪縮放。畫好的內容會保存在這個瀏覽器裡。',
+    'whiteboard.tools': '繪圖工具',
+    'whiteboard.style': '樣式',
+    'whiteboard.tool.hand': '抓手',
+    'whiteboard.tool.select': '選取',
+    'whiteboard.tool.rect': '矩形',
+    'whiteboard.tool.ellipse': '橢圓',
+    'whiteboard.tool.arrow': '箭頭',
+    'whiteboard.tool.line': '直線',
+    'whiteboard.tool.pen': '畫筆',
+    'whiteboard.tool.text': '文字',
+    'whiteboard.tool.note': '便利貼',
+    'whiteboard.tool.eraser': '橡皮擦',
+    'whiteboard.undo': '復原',
+    'whiteboard.redo': '重做',
+    'whiteboard.clear': '清除畫板',
+    'whiteboard.color.ink': '墨色',
+    'whiteboard.color.red': '紅',
+    'whiteboard.color.blue': '藍',
+    'whiteboard.color.green': '綠',
+    'whiteboard.color.orange': '橘',
+    'whiteboard.size.s': '小',
+    'whiteboard.size.m': '中',
+    'whiteboard.size.l': '大',
+    'whiteboard.fill.none': '無填色',
+    'whiteboard.fill.hachure': '斜線',
+    'whiteboard.fill.solid': '實心',
 } as const;
 
 export default zhTW;

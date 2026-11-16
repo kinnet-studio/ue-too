@@ -49,6 +49,7 @@ export default defineConfig({
                     __dirname,
                     'src/state-machine-visualizer/index.html'
                 ),
+                whiteboard: resolve(__dirname, 'src/whiteboard/index.html'),
             },
         },
     },

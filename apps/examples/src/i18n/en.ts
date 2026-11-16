@@ -48,7 +48,8 @@ const en = {
     'card.camera-animation.desc':
         'Smooth camera flights along a zoom-and-pan path. Click to fly somewhere nearby, or wander off and press Back to start to watch the camera zoom out, glide home, and zoom back in.',
     'card.svg.title': 'SVG Example',
-    'card.svg.desc': 'SVG examples. Demonstrates how to work with SVG in uē-tôo.',
+    'card.svg.desc':
+        'SVG examples. Demonstrates how to work with SVG in uē-tôo.',
     'card.pele-mermaid.title': 'Mermaid (Pele)',
     'card.pele-mermaid.desc':
         'Editable Mermaid diagrams rendered by Pele, panned and zoomed with the uē-tôo camera.',
@@ -64,12 +65,9 @@ const en = {
     'card.view': 'View Example',
 
     // Shared control instructions (HTML)
-    'controls.scroll-zoom':
-        '<kbd>Scroll</kbd> to zoom in and out',
-    'controls.scroll-zoom-short':
-        '<kbd>Scroll</kbd> to zoom',
-    'controls.scroll-zoom-image':
-        '<kbd>Scroll</kbd> to zoom in on the image',
+    'controls.scroll-zoom': '<kbd>Scroll</kbd> to zoom in and out',
+    'controls.scroll-zoom-short': '<kbd>Scroll</kbd> to zoom',
+    'controls.scroll-zoom-image': '<kbd>Scroll</kbd> to zoom in on the image',
     'controls.scroll-zoom-ruler':
         '<kbd>Scroll</kbd> to zoom — watch the ruler scale adapt',
     'controls.pan':
@@ -135,21 +133,22 @@ const en = {
     'camera-animation.interrupt':
         'Pan or zoom during a flight to take over the camera',
     'camera-animation.back-button': 'Back to start',
-    'camera-animation.ruler': 'A ruler overlay shows the current viewport boundaries',
+    'camera-animation.ruler':
+        'A ruler overlay shows the current viewport boundaries',
 
     // Image example
     'image.title': 'Image Example',
     'image.desc':
         'Upload an image to draw it on the pannable and zoomable canvas. Colored axis arrows (red = Y, green = X) at the origin show the world coordinate directions.',
     'image.choose': 'Choose Image',
-    'image.upload':
-        'Click <strong>Choose Image</strong> to upload a file',
+    'image.upload': 'Click <strong>Choose Image</strong> to upload a file',
 
     // SVG example
     'svg.title': 'SVG Example',
     'svg.desc':
         'Uses the board camera system with an SVG element instead of a canvas. The camera transform (translate, scale, rotate) is applied to an SVG <code>&lt;g&gt;</code> group.',
-    'svg.inputs': 'Use the inputs below to set camera position, rotation, and zoom',
+    'svg.inputs':
+        'Use the inputs below to set camera position, rotation, and zoom',
     'svg.click-log':
         '<kbd>Click</kbd> to log viewport and world coordinates to the console',
     'svg.rotation': 'Rotation',
@@ -196,10 +195,45 @@ const en = {
     'physics.title': 'Physics Example',
     'physics.desc':
         'A mechanical four-bar linkage simulated with rigid body physics and pin joint constraints. Two actuating links are pinned at fixed points and connected through a triangular link.',
-    'physics.arrows':
-        '<kbd>Arrow keys</kbd> to apply forces to the left link',
-    'physics.qe':
-        '<kbd>Q</kbd> / <kbd>E</kbd> to rotate the left link',
+    'physics.arrows': '<kbd>Arrow keys</kbd> to apply forces to the left link',
+    'physics.qe': '<kbd>Q</kbd> / <kbd>E</kbd> to rotate the left link',
+
+    // Whiteboard example
+    'nav.whiteboard': 'Whiteboard',
+    'card.whiteboard.title': 'Whiteboard',
+    'card.whiteboard.desc':
+        'Draw shapes, arrows, pen strokes, text and sticky notes on an infinite canvas with @ue-too/board/whiteboard.',
+    'whiteboard.title': 'Whiteboard',
+    'whiteboard.desc':
+        'Draw shapes, arrows, pen strokes, text and sticky notes on an infinite canvas with <code>@ue-too/board/whiteboard</code>.',
+    'whiteboard.hint':
+        'Pick a tool below, or press its letter. Space + drag or a middle-drag pans, scroll zooms. Your drawing is kept in this browser.',
+    'whiteboard.tools': 'Drawing tools',
+    'whiteboard.style': 'Style',
+    'whiteboard.tool.hand': 'Hand',
+    'whiteboard.tool.select': 'Select',
+    'whiteboard.tool.rect': 'Rectangle',
+    'whiteboard.tool.ellipse': 'Ellipse',
+    'whiteboard.tool.arrow': 'Arrow',
+    'whiteboard.tool.line': 'Line',
+    'whiteboard.tool.pen': 'Pen',
+    'whiteboard.tool.text': 'Text',
+    'whiteboard.tool.note': 'Sticky note',
+    'whiteboard.tool.eraser': 'Eraser',
+    'whiteboard.undo': 'Undo',
+    'whiteboard.redo': 'Redo',
+    'whiteboard.clear': 'Clear the board',
+    'whiteboard.color.ink': 'Ink',
+    'whiteboard.color.red': 'Red',
+    'whiteboard.color.blue': 'Blue',
+    'whiteboard.color.green': 'Green',
+    'whiteboard.color.orange': 'Orange',
+    'whiteboard.size.s': 'Small',
+    'whiteboard.size.m': 'Medium',
+    'whiteboard.size.l': 'Large',
+    'whiteboard.fill.none': 'No fill',
+    'whiteboard.fill.hachure': 'Hatched',
+    'whiteboard.fill.solid': 'Solid',
 } as const;
 
 export default en;
