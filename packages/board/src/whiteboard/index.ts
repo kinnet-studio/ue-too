@@ -53,4 +53,5 @@ export { createSegmentTool } from './editor/tools/segment-tool';
 export { createPenTool } from './editor/tools/pen';
 export { createSelectTool } from './editor/tools/select';
 export { createEraserTool } from './editor/tools/eraser';
+export { createPlaceTool } from './editor/tools/place-tool';
 export { Editor, type EditorOptions, type EditorState } from './editor/editor';

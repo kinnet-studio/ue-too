@@ -13,7 +13,12 @@ import {
 import { shapeBounds } from '../geometry/bounds';
 import { type Box, boxesOverlap } from '../geometry/box';
 import { hitShape, shapesInBox } from '../geometry/hit-test';
-import type { TextEnv } from '../geometry/text';
+import {
+    LINE_HEIGHT,
+    NOTE_PADDING,
+    type TextEnv,
+    textFont,
+} from '../geometry/text';
 import { type Handle, drawSelectionOverlay } from '../render/overlay';
 import { ShapePainter } from '../render/painter';
 import { DEFAULT_THEME, type WhiteboardTheme } from '../render/theme';
@@ -30,7 +35,7 @@ import {
 } from './events';
 import { PointerInput } from './pointer-input';
 import { Selection, handlesFor, selectionBox } from './selection';
-import type { TextInput } from './text-input';
+import { DomTextInput, type TextInput } from './text-input';
 import {
     type EditorBackground,
     type ToolContext,
@@ -43,6 +48,7 @@ import { createBoxTool } from './tools/box-tool';
 import { createEraserTool } from './tools/eraser';
 import { activateBackground, createHandTool } from './tools/hand';
 import { createPenTool } from './tools/pen';
+import { createPlaceTool } from './tools/place-tool';
 import { createSegmentTool } from './tools/segment-tool';
 import { createSelectTool } from './tools/select';
 
@@ -167,6 +173,7 @@ export class Editor {
     private _pendingTool: { tool: ToolName; select?: string[] } | null = null;
     private _lastState: EditorState;
     private _destroyed = false;
+    private _fontRequested = false;
 
     constructor(options: EditorOptions) {
         this._board = options.board;
@@ -175,7 +182,11 @@ export class Editor {
         this.history = new History(this.document);
         this._theme = { ...DEFAULT_THEME, ...options.theme };
         this._painter = new ShapePainter({ createPath: options.createPath });
-        this._textInput = options.textInput;
+        const overlayParent =
+            options.overlayParent ?? options.canvas?.parentElement;
+        this._textInput =
+            options.textInput ??
+            (overlayParent ? new DomTextInput(overlayParent) : undefined);
         this._background = {
             hitTest:
                 options.background?.hitTest?.bind(options.background) ??
@@ -302,6 +313,7 @@ export class Editor {
             },
             this._theme
         );
+        this.followText();
     }
 
     /** Takes back your last change, abandoning any gesture under way first */
@@ -381,23 +393,74 @@ export class Editor {
     /** Tells listeners when the state changed */
     protected emit(): void {
         if (this._destroyed) return;
+        this.loadHandFont();
         const state = this.computeState();
         if (sameState(state, this._lastState)) return;
         this._lastState = state;
         for (const listener of [...this._listeners]) listener(state);
     }
 
-    /** Abandons the gesture under way, if any */
+    /** Abandons the gesture under way, if any; text being typed is kept */
     protected cancelGesture(): void {
+        this.finishText();
         if (this.input.pressed) this.input.cancel();
         else this.dispatch('cancel', {});
         if (this.history.open) this.history.cancel();
     }
 
     /** Starts editing a text shape's or note's text */
-    protected editText(_id: string): void {}
+    protected editText(id: string): void {
+        const shape = this.document.get(id);
+        const input = this._textInput;
+        if (!input || (shape?.type !== 'text' && shape?.type !== 'note'))
+            return;
+        this.finishText();
+        this.history.begin();
+        this._editingId = id;
+        const size = FONT_SIZE[shape.style.size];
+        input.open({
+            text: shape.text,
+            font: textFont(shape.style.size, this._env.family),
+            color:
+                shape.type === 'note'
+                    ? this._theme.paperText
+                    : this._theme.colors[shape.style.color],
+            lineHeight: size * LINE_HEIGHT,
+            rect: this.textRect(shape),
+            scale: this._board.camera.zoomLevel,
+            wrap: shape.type === 'note',
+            onInput: text => {
+                const current = this.document.get(id);
+                if (current?.type === 'text' || current?.type === 'note') {
+                    this.document.put({ ...current, text });
+                }
+            },
+            onCommit: text => {
+                this._editingId = null;
+                const current = this.document.get(id);
+                if (current?.type === 'text' && text.trim() === '') {
+                    this.document.remove(id);
+                } else if (
+                    (current?.type === 'text' || current?.type === 'note') &&
+                    current.text !== text
+                ) {
+                    this.document.put({ ...current, text });
+                }
+                this.history.end();
+                this.emit();
+            },
+        });
+        this.emit();
+    }
+
+    /** Ends text editing, keeping what was typed */
+    protected finishText(): void {
+        if (this._textInput?.active) this._textInput.close();
+    }
 
     private dispatch(event: keyof ToolEvents, payload: unknown): void {
+        // A press elsewhere ends text editing before anything else happens
+        if (event === 'pointerDown') this.finishText();
         (this._machine.happens as (event: string, payload: unknown) => unknown)(
             event,
             payload
@@ -489,6 +552,9 @@ export class Editor {
                 return createPenTool(context);
             case 'eraser':
                 return createEraserTool(context);
+            case 'text':
+            case 'note':
+                return createPlaceTool(context, name);
             default:
                 return createToolMachine(
                     context,
@@ -540,6 +606,56 @@ export class Editor {
             w: Math.max(...xs) + margin - x,
             h: Math.max(...ys) + margin - y,
         };
+    }
+
+    /**
+     * Where a text shape's or note's text sits: window position, and its
+     * size at zoom 1
+     */
+    private textRect(shape: Shape): Box {
+        const inset = shape.type === 'note' ? NOTE_PADDING : 0;
+        const camera = this._board.camera;
+        const viewPort = camera.convertFromWorld2ViewPort({
+            x: shape.x + inset,
+            y: shape.y + inset,
+        });
+        const canvas = this._canvas?.getBoundingClientRect();
+        const frame = shape.type === 'note' ? shape : this.bounds(shape);
+        return {
+            x: (canvas?.left ?? 0) + camera.viewPortWidth / 2 + viewPort.x,
+            y: (canvas?.top ?? 0) + camera.viewPortHeight / 2 + viewPort.y,
+            w: Math.max(frame.w - inset * 2, FONT_SIZE[shape.style.size]),
+            h: Math.max(
+                frame.h - inset * 2,
+                FONT_SIZE[shape.style.size] * LINE_HEIGHT
+            ),
+        };
+    }
+
+    /** Keeps the text being edited over its shape as the camera moves */
+    private followText(): void {
+        const id = this._editingId;
+        const shape = id ? this.document.get(id) : undefined;
+        if (!shape || !this._textInput?.active) return;
+        this._textInput.reposition(
+            this.textRect(shape),
+            this._board.camera.zoomLevel
+        );
+    }
+
+    // The handwriting font loads only once text is on the board, or about to be
+    private loadHandFont(): void {
+        if (this._fontRequested) return;
+        const needed =
+            this.tool === 'text' ||
+            this.tool === 'note' ||
+            this.document
+                .all()
+                .some(s => s.type === 'text' || s.type === 'note');
+        const fonts = this._canvas?.ownerDocument.fonts;
+        if (!needed || !fonts) return;
+        this._fontRequested = true;
+        fonts.load(textFont('m', this._env.family)).catch(() => {});
     }
 
     private applyCursor(): void {
