@@ -40,6 +40,7 @@ import {
     toolContext,
 } from './tool-context';
 import { createBoxTool } from './tools/box-tool';
+import { createEraserTool } from './tools/eraser';
 import { activateBackground, createHandTool } from './tools/hand';
 import { createPenTool } from './tools/pen';
 import { createSegmentTool } from './tools/segment-tool';
@@ -232,6 +233,11 @@ export class Editor {
     /** The tool in use */
     get tool(): ToolName {
         return this._machine.currentState as ToolName;
+    }
+
+    /** Shapes the eraser has marked; they are drawn faded until it lets go */
+    get erasing(): ReadonlySet<string> {
+        return this._overlay.erasing;
     }
 
     /** Switches tools, abandoning any gesture under way */
@@ -481,6 +487,8 @@ export class Editor {
                 return createSegmentTool(context, name);
             case 'pen':
                 return createPenTool(context);
+            case 'eraser':
+                return createEraserTool(context);
             default:
                 return createToolMachine(
                     context,
