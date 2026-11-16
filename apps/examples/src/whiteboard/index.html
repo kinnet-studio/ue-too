@@ -1,0 +1,174 @@
+<!doctype html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8" />
+        <link rel="icon" type="image/png" sizes="32x32" href="/favicon.png" />
+        <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title data-i18n-title="whiteboard.title">Whiteboard Example</title>
+        <link rel="stylesheet" href="/theme.css" />
+        <style>
+            html,
+            body {
+                margin: 0;
+                height: 100%;
+                overflow: hidden;
+            }
+            #graph {
+                position: fixed;
+                inset: 0;
+                display: block;
+                touch-action: none;
+                user-select: none;
+                -webkit-user-select: none;
+                background: var(--c-bg);
+            }
+            .card {
+                position: fixed;
+                top: 12px;
+                left: 12px;
+                max-width: min(360px, calc(100vw - 24px));
+                box-sizing: border-box;
+                padding: 12px 16px;
+                background: var(--c-bg);
+                border: 1px solid var(--c-divider);
+                border-radius: 10px;
+                box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+            }
+            .card h1 {
+                margin: 0 0 4px;
+                font-size: 16px;
+                color: var(--c-text-1);
+            }
+            .card p {
+                margin: 0 0 8px;
+                font-size: 13px;
+                line-height: 1.45;
+                color: var(--c-text-2);
+            }
+            .stack {
+                position: fixed;
+                left: 50%;
+                bottom: calc(16px + env(safe-area-inset-bottom, 0px));
+                transform: translateX(-50%);
+                display: flex;
+                flex-direction: column;
+                align-items: center;
+                gap: 10px;
+                max-width: calc(100vw - 16px);
+            }
+            .bar {
+                display: flex;
+                align-items: center;
+                gap: 2px;
+                padding: 4px;
+                background: var(--c-bg);
+                border: 1px solid var(--c-divider);
+                border-radius: 12px;
+                box-shadow:
+                    0 6px 20px rgba(0, 0, 0, 0.08),
+                    0 1px 3px rgba(0, 0, 0, 0.06);
+                overflow-x: auto;
+                max-width: 100%;
+            }
+            .bar button {
+                flex: none;
+                width: 38px;
+                height: 38px;
+                display: grid;
+                place-items: center;
+                padding: 0;
+                border: 0;
+                border-radius: 8px;
+                background: transparent;
+                color: var(--c-text-1);
+                cursor: pointer;
+            }
+            .bar button:hover:not(:disabled) {
+                background: var(--c-bg-soft);
+            }
+            .bar button[aria-pressed='true'] {
+                background: rgba(122, 178, 82, 0.2);
+                color: var(--c-brand-1);
+            }
+            .bar button:disabled {
+                opacity: 0.35;
+                cursor: default;
+            }
+            .bar button:focus-visible {
+                outline: 2px solid var(--c-brand-1);
+                outline-offset: 1px;
+            }
+            .bar svg {
+                width: 19px;
+                height: 19px;
+            }
+            .bar .sep {
+                flex: none;
+                width: 1px;
+                height: 22px;
+                margin: 0 4px;
+                background: var(--c-divider);
+            }
+            .swatch {
+                width: 18px;
+                height: 18px;
+                border-radius: 50%;
+            }
+            .size {
+                width: 16px;
+                border-radius: 2px;
+                background: currentColor;
+            }
+            .fill {
+                width: 14px;
+                height: 14px;
+                border: 2px solid currentColor;
+                border-radius: 3px;
+            }
+            .fill.hachure {
+                background: repeating-linear-gradient(
+                    -45deg,
+                    currentColor 0 1.5px,
+                    transparent 1.5px 4px
+                );
+            }
+            .fill.solid {
+                background: currentColor;
+                opacity: 0.5;
+            }
+        </style>
+    </head>
+    <body>
+        <canvas id="graph"></canvas>
+        <div class="card">
+            <div class="lang-bar" id="lang-switcher-container"></div>
+            <h1 data-i18n="whiteboard.title">Whiteboard</h1>
+            <p data-i18n-html="whiteboard.desc">
+                Draw shapes, arrows, pen strokes, text and sticky notes on an
+                infinite canvas with <code>@ue-too/board/whiteboard</code>.
+            </p>
+            <p data-i18n="whiteboard.hint">
+                Pick a tool below, or press its letter. Space + drag or a
+                middle-drag pans, scroll zooms. Your drawing is kept in this
+                browser.
+            </p>
+        </div>
+        <div class="stack">
+            <div
+                class="bar"
+                id="style-panel"
+                role="group"
+                data-i18n-aria-label="whiteboard.style"
+            ></div>
+            <div
+                class="bar"
+                id="dock"
+                role="toolbar"
+                data-i18n-aria-label="whiteboard.tools"
+            ></div>
+        </div>
+        <script type="module" src="/i18n/setup.ts"></script>
+        <script type="module" src="main.ts"></script>
+    </body>
+</html>

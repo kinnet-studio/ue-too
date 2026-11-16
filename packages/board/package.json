@@ -35,6 +35,9 @@
         },
         "./package.json": "./package.json"
     },
+    "publishEntries": [
+        "whiteboard"
+    ],
     "main": "./src/index.ts",
     "types": "./src/index.ts",
     "module": "./src/index.ts",
