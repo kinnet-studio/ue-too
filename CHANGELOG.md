@@ -1,3 +1,148 @@
+## 0.21.0 (2026-11-16)
+
+### 🚀 Features
+
+- **board:** one-finger-pan, two-finger-pinch touch state machine ([#469](https://github.com/kinnet-studio/ue-too/pull/469))
+- ⚠️  **board:** start boards in keyboard-mouse mode, with a toggle switch in the examples ([#473](https://github.com/kinnet-studio/ue-too/pull/473))
+- **board:** add a whiteboard editor (@ue-too/board/whiteboard) ([#476](https://github.com/kinnet-studio/ue-too/pull/476))
+- **examples:** editable Mermaid diagrams rendered by Pele, panned and zoomed with the board camera ([#467](https://github.com/kinnet-studio/ue-too/pull/467))
+- **examples:** start the Pele example on the Pele playground's gitGraph ([#468](https://github.com/kinnet-studio/ue-too/pull/468))
+- **examples:** one-finger drag pans the Pele example on touch ([#471](https://github.com/kinnet-studio/ue-too/pull/471), [#469](https://github.com/kinnet-studio/ue-too/issues/469))
+- **examples:** match the docs site's theme ([#475](https://github.com/kinnet-studio/ue-too/pull/475), [#13200](https://github.com/kinnet-studio/ue-too/issues/13200))
+
+### 🩹 Fixes
+
+- **examples:** full-width Pele diagram on first load on phones ([#470](https://github.com/kinnet-studio/ue-too/pull/470))
+
+### ⚠️  Breaking Changes
+
+- **board:** start boards in keyboard-mouse mode, with a toggle switch in the examples  ([#473](https://github.com/kinnet-studio/ue-too/pull/473))
+  a board's input mode now starts as 'kmt' instead of 'TBD',
+  so a plain scroll wheel zooms at the cursor instead of panning, and wheel
+  events are no longer scored. To keep the old behavior, call
+  board.enableAutoInputMode() (or tracker.enableInputModeDetection()); to make
+  the wheel pan, call board.setInputMode('trackpad').
+  Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>
+  Claude-Session: https://claude.ai/code/session_01YVuuAZ3JKu72PHqYgnsUMH
+  * feat(board-pixi-integration): add an inputMode option to baseInitApp
+  baseInitApp({ inputMode: 'trackpad' }) starts the board's input tracker in
+  that mode; it defaults to 'kmt' like the board itself. Switch later with
+  components.observableInputTracker.setMode.
+  Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>
+  Claude-Session: https://claude.ai/code/session_01YVuuAZ3JKu72PHqYgnsUMH
+  * feat(examples): add a keyboard + mouse / trackpad picker
+  A picker next to the language picker lets visitors choose their input
+  device. The choice is saved in localStorage (ue-too-examples-input-mode),
+  defaults to keyboard + mouse, and every example's board follows it live.
+  Add a bun test target for the examples app covering the saved preference,
+  and a data-i18n-aria-label attribute so the picker's label follows the
+  language picker.
+  Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>
+  Claude-Session: https://claude.ai/code/session_01YVuuAZ3JKu72PHqYgnsUMH
+  * feat(examples): make the input device picker a toggle switch
+  Replace the Keyboard + Mouse / Trackpad dropdown with a switch: the two
+  labels sit either side of it and the active one is highlighted. It is a
+  role="switch" button named "Trackpad" (on = trackpad). After a mouse click
+  it hands focus back to the page so the next Space + drag pans instead of
+  flipping the switch; keyboard users keep focus.
+  The wider top bar no longer fits beside the title on a phone, so below
+  640px it takes its own line, and on the Pele page (a narrow side panel at
+  every size) it always does. Point the Pele help at the shared "Scroll to
+  zoom" text now that a plain scroll zooms there, and drop the unused label
+  and Ctrl + Scroll strings.
+  Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>
+  Claude-Session: https://claude.ai/code/session_01YVuuAZ3JKu72PHqYgnsUMH
+  * fix(examples): fit fixed-width canvases to the page on phones
+  Seven examples drew an 800 × 600 (Navigation: 600 × 500) canvas, wider than
+  a phone, so the page scrolled sideways and the canvas was cut off. Each
+  canvas is now its design size or the page width less a 16px gutter each
+  side, whichever is smaller, keeping its aspect ratio:
+  - Ruler, Navigation, Camera Animation, Image: a CSS size
+    (width: min(800px, 100vw - 32px); aspect-ratio), which Board follows.
+  - Konva, Fabric, SVG: their libraries need pixel sizes, so a small
+    fitToPage helper sizes the stage / canvas / SVG and the camera viewport
+    at load and again on window resize.
+  Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>
+  Claude-Session: https://claude.ai/code/session_01YVuuAZ3JKu72PHqYgnsUMH
+  * fix(examples): fit canvases to short windows and keep the SVG unsqueezed
+  The example pages are a fixed-height, non-scrolling column. On a short
+  window (a 1366 × 768 laptop) the instructions, canvas and controls didn't
+  fit: the SVG example's drawing was squeezed by flex shrinking, and five
+  canvas pages ran off the top and bottom instead, hiding the input switch
+  and language picker out of reach.
+  fitToPage now fits each canvas into the room the window has left after the
+  instructions and controls, as well as to its width, and re-fits when the
+  window or those blocks change size (switching language, or the top bar
+  moving onto its own line). The four Board pages use it too, setting the
+  canvas's CSS size for the board to follow, instead of the width-only CSS
+  rule. The SVG no longer flex-shrinks, so it always draws at the size the
+  camera expects.
+  Collision and collision-legacy draw a full-window canvas with a 1px border
+  that stuck out 2px past the window; box-sizing: border-box keeps the
+  border inside.
+  Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>
+  Claude-Session: https://claude.ai/code/session_01YVuuAZ3JKu72PHqYgnsUMH
+  * fix(board-konva-integration): keep the wheel from scrolling or zooming the page
+  KonvaInputParser's wheel handler drove the camera but let the browser act
+  on the event too: on a page that scrolls, a wheel over the stage also
+  scrolled the page, and a trackpad pinch (Ctrl + wheel) zoomed the whole
+  browser page. Call preventDefault on the wheel event.
+  Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>
+  Claude-Session: https://claude.ai/code/session_01YVuuAZ3JKu72PHqYgnsUMH
+  * fix(board-fabric-integration): keep the wheel from scrolling or zooming the page
+  FabricInputEventParser's wheel handler drove the camera but let the browser
+  act on the event too: on a page that scrolls, a wheel over the canvas also
+  scrolled the page, and a trackpad pinch (Ctrl + wheel) zoomed the whole
+  browser page. Call preventDefault on the wheel event while the parser is
+  enabled; a disabled parser still leaves the wheel to the page.
+  Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>
+  Claude-Session: https://claude.ai/code/session_01YVuuAZ3JKu72PHqYgnsUMH
+  * fix(examples): scroll the example pages on windows too short to fit
+  A phone held sideways (844 × 390) is shorter than the instructions alone,
+  and the example pages were a fixed-height column with overflow hidden, so
+  the top bar, title and canvas ran off-screen out of reach. Let the nine
+  pages with that layout grow past the window and scroll: the column is now
+  at least the window's height (with a 16px margin top and bottom) instead
+  of exactly it, and the body no longer hides overflow. Pages that fit look
+  the same and don't scroll. Base and Attach/Detach size their canvas at
+  50vh instead of 50% of a column that no longer has a fixed height.
+  A wheel over a canvas still zooms without scrolling the page (the Konva
+  and Fabric parsers now prevent the default too); off the canvas it
+  scrolls the page.
+  Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>
+  Claude-Session: https://claude.ai/code/session_01YVuuAZ3JKu72PHqYgnsUMH
+  * fix(board): keep Space over the canvas from scrolling the page
+  Space aimed at the page starts Space + drag panning, but the board never
+  prevented its default, so on a page that scrolls, Space (and every key
+  repeat while it is held) also scrolled the page under the pan. When the
+  pointer is over the canvas and the parser is enabled, prevent the default.
+  With the pointer elsewhere Space still scrolls the page, so a board
+  embedded in a long page doesn't take Space over, and a space typed into a
+  field is never touched.
+  Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>
+  Claude-Session: https://claude.ai/code/session_01YVuuAZ3JKu72PHqYgnsUMH
+  * fix(board-konva-integration): keep Space over the stage from scrolling the page
+  Space starts Space + drag panning, but on a page that scrolls it (and every
+  key repeat while held) also scrolled the page. When Space is aimed at the
+  page and the pointer is over the stage, prevent the default. Elsewhere, or
+  typed into a field, Space is left alone.
+  Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>
+  Claude-Session: https://claude.ai/code/session_01YVuuAZ3JKu72PHqYgnsUMH
+  * fix(board-fabric-integration): keep Space over the canvas from scrolling the page
+  Space starts Space + drag panning, but on a page that scrolls it (and every
+  key repeat while held) also scrolled the page. When the parser is enabled,
+  Space is aimed at the page and the pointer is over the canvas (its wrapper,
+  for an interactive canvas's two stacked layers), prevent the default.
+  Elsewhere, typed into a field, or while disabled, Space is left alone.
+  Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>
+  Claude-Session: https://claude.ai/code/session_01YVuuAZ3JKu72PHqYgnsUMH
+
+### ❤️ Thank You
+
+- Claude
+- Claude Opus 5.5
+- vee @niuee
+
 ## 0.20.0 (2026-11-09)
 
 ### 🚀 Features
