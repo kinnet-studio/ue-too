@@ -14,7 +14,7 @@ import { shapeBounds } from '../geometry/bounds';
 import { type Box, boxesOverlap } from '../geometry/box';
 import { hitShape, shapesInBox } from '../geometry/hit-test';
 import type { TextEnv } from '../geometry/text';
-import { drawSelectionOverlay } from '../render/overlay';
+import { type Handle, drawSelectionOverlay } from '../render/overlay';
 import { ShapePainter } from '../render/painter';
 import { DEFAULT_THEME, type WhiteboardTheme } from '../render/theme';
 import {
@@ -29,7 +29,7 @@ import {
     type ToolName,
 } from './events';
 import { PointerInput } from './pointer-input';
-import { Selection } from './selection';
+import { Selection, handlesFor, selectionBox } from './selection';
 import type { TextInput } from './text-input';
 import {
     type EditorBackground,
@@ -43,6 +43,7 @@ import { createBoxTool } from './tools/box-tool';
 import { activateBackground, createHandTool } from './tools/hand';
 import { createPenTool } from './tools/pen';
 import { createSegmentTool } from './tools/segment-tool';
+import { createSelectTool } from './tools/select';
 
 /**
  * How to set up an {@link Editor}.
@@ -309,6 +310,18 @@ export class Editor {
         this.history.redo();
     }
 
+    /** Deletes the selected shapes, as one undo step */
+    deleteSelection(): void {
+        this.cancelGesture();
+        this.document.remove([...this._selection.ids]);
+    }
+
+    /** Selects every shape, switching to the select tool */
+    selectAll(): void {
+        this.setTool('select');
+        this._selection.set(this.document.all().map(shape => shape.id));
+    }
+
     /** Removes the editor's listeners; the document is left as it is */
     destroy(): void {
         this._destroyed = true;
@@ -329,9 +342,21 @@ export class Editor {
         return box;
     }
 
-    /** The selection box and handles to draw (none until shapes can be selected) */
-    protected selectionOverlay(): { selection: Box | null; handles: [] } {
-        return { selection: null, handles: [] };
+    /** The selection box and handles to draw, while the select tool is picked */
+    protected selectionOverlay(): { selection: Box | null; handles: Handle[] } {
+        if (this.tool !== 'select') return { selection: null, handles: [] };
+        const shapes = this.selectedShapes();
+        return {
+            selection: selectionBox(shapes, this._env),
+            handles: handlesFor(shapes, this._env),
+        };
+    }
+
+    /** The selected shapes, in selection order */
+    protected selectedShapes(): Shape[] {
+        return this._selection.ids
+            .map(id => this.document.get(id))
+            .filter((shape): shape is Shape => shape !== undefined);
     }
 
     protected computeState(): EditorState {
@@ -383,6 +408,8 @@ export class Editor {
     private switchTool(tool: ToolName): void {
         this._overlay.marquee = null;
         this._overlay.erasing.clear();
+        // Selections belong to the select tool; drawing starts fresh
+        if (tool !== 'select') this._selection.clear();
         this._machineContext.requestedTool = tool;
         (this._machine.happens as (event: string, payload: unknown) => unknown)(
             'pickTool',
@@ -444,6 +471,8 @@ export class Editor {
         switch (name) {
             case 'hand':
                 return createHandTool(context);
+            case 'select':
+                return createSelectTool(context);
             case 'rect':
             case 'ellipse':
                 return createBoxTool(context, name);

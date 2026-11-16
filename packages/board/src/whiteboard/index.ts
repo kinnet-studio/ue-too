@@ -51,4 +51,5 @@ export { activateBackground, createHandTool } from './editor/tools/hand';
 export { createBoxTool } from './editor/tools/box-tool';
 export { createSegmentTool } from './editor/tools/segment-tool';
 export { createPenTool } from './editor/tools/pen';
+export { createSelectTool } from './editor/tools/select';
 export { Editor, type EditorOptions, type EditorState } from './editor/editor';
