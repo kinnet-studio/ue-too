@@ -59,12 +59,13 @@ export function createBoxTool(
                         action: (ctx, p) => {
                             ctx.history.begin();
                             start = p.world;
-                            shape = {
+                            const created = {
                                 ...newShape(ctx, type, start.x, start.y),
                                 w: 0,
                                 h: 0,
-                            };
-                            ctx.doc.put(shape);
+                            } as RectShape | EllipseShape;
+                            shape = created;
+                            ctx.doc.put(created);
                         },
                         defaultTargetState: 'CREATING',
                     },

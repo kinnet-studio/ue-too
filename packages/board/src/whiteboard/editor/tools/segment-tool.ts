@@ -55,11 +55,12 @@ export function createSegmentTool(
                         action: (ctx, p) => {
                             ctx.history.begin();
                             start = p.world;
-                            shape = {
+                            const created = {
                                 ...newShape(ctx, type, start.x, start.y),
                                 end: [0, 0],
-                            };
-                            ctx.doc.put(shape);
+                            } as ArrowShape | LineShape;
+                            shape = created;
+                            ctx.doc.put(created);
                         },
                         defaultTargetState: 'CREATING',
                     },
