@@ -11,6 +11,10 @@ export type RandomBytes = (bytes: Uint8Array) => Uint8Array;
 
 const cryptoBytes: RandomBytes = bytes => crypto.getRandomValues(bytes);
 
+// Bytes 0–247 map four to a character (byte >> 2 is 0–61); 248–255 would
+// make some characters likelier, so they are drawn again
+const UNBIASED_LIMIT = ALPHABET.length * 4;
+
 /**
  * A new random record id: 16 base-62 characters (about 95 bits).
  *
@@ -19,9 +23,13 @@ const cryptoBytes: RandomBytes = bytes => crypto.getRandomValues(bytes);
  * @group Whiteboard Document
  */
 export function createId(random: RandomBytes = cryptoBytes): string {
-    const bytes = random(new Uint8Array(ID_LENGTH));
     let id = '';
-    for (const byte of bytes) id += ALPHABET[byte % ALPHABET.length];
+    while (id.length < ID_LENGTH) {
+        for (const byte of random(new Uint8Array(ID_LENGTH))) {
+            if (byte >= UNBIASED_LIMIT || id.length === ID_LENGTH) continue;
+            id += ALPHABET[byte >> 2];
+        }
+    }
     return id;
 }
 

@@ -9,6 +9,14 @@ describe('createId', () => {
         for (const id of ids) expect(id).toMatch(/^[0-9A-Za-z]{16}$/);
     });
 
+    it('rejects bytes that would bias the alphabet instead of wrapping them', () => {
+        // Wrapping 255 into the alphabet would make some characters likelier
+        // than others; such bytes are drawn again
+        const alternating = (bytes: Uint8Array) =>
+            bytes.map((_, i) => (i % 2 === 0 ? 255 : 247));
+        expect(createId(alternating)).toBe('z'.repeat(16));
+    });
+
     it('uses the random source it is given', () => {
         const zeros = (bytes: Uint8Array) => bytes.fill(0);
         expect(createId(zeros)).toBe('0000000000000000');
