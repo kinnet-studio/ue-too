@@ -39,7 +39,10 @@ import {
     createToolMachine,
     toolContext,
 } from './tool-context';
+import { createBoxTool } from './tools/box-tool';
 import { activateBackground, createHandTool } from './tools/hand';
+import { createPenTool } from './tools/pen';
+import { createSegmentTool } from './tools/segment-tool';
 
 /**
  * How to set up an {@link Editor}.
@@ -294,6 +297,18 @@ export class Editor {
         );
     }
 
+    /** Takes back your last change, abandoning any gesture under way first */
+    undo(): void {
+        this.cancelGesture();
+        this.history.undo();
+    }
+
+    /** Puts back the last change you undid */
+    redo(): void {
+        this.cancelGesture();
+        this.history.redo();
+    }
+
     /** Removes the editor's listeners; the document is left as it is */
     destroy(): void {
         this._destroyed = true;
@@ -426,8 +441,24 @@ export class Editor {
         name: ToolName,
         context: ToolContext
     ): HostableStateMachine {
-        if (name === 'hand') return createHandTool(context);
-        return createToolMachine(context, { IDLE: { reactions: {} } }, 'IDLE');
+        switch (name) {
+            case 'hand':
+                return createHandTool(context);
+            case 'rect':
+            case 'ellipse':
+                return createBoxTool(context, name);
+            case 'arrow':
+            case 'line':
+                return createSegmentTool(context, name);
+            case 'pen':
+                return createPenTool(context);
+            default:
+                return createToolMachine(
+                    context,
+                    { IDLE: { reactions: {} } },
+                    'IDLE'
+                );
+        }
     }
 
     private createTextEnv(): TextEnv {
