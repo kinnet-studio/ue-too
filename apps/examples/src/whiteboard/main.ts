@@ -9,14 +9,11 @@ import {
     type ShapeSize,
     TOOL_NAMES,
     type ToolName,
-    WhiteboardDocument,
 } from '@ue-too/board/whiteboard';
 
 import { t } from '../i18n';
 import { followInputMode } from '../input-mode';
-
-const STORAGE_KEY = 'ue-too-examples:whiteboard';
-const SAVE_DELAY = 400;
+import { loadBoard, saveBoard } from './storage';
 
 // 24 × 24 stroke icons
 const ICONS: Record<ToolName | 'undo' | 'redo' | 'clear', string> = {
@@ -71,40 +68,24 @@ followInputMode(mode => board.setInputMode(mode));
 // The board sizes the canvas to the window once; keep it that way
 window.addEventListener('resize', () => (board.fullScreen = true));
 
-function load(): WhiteboardDocument {
+// localStorage can throw on access (blocked site data); then nothing is saved
+function browserStorage(): Storage | null {
     try {
-        const saved = localStorage.getItem(STORAGE_KEY);
-        if (saved) return WhiteboardDocument.fromSnapshot(JSON.parse(saved));
-    } catch (error) {
-        console.warn('Could not read the saved whiteboard', error);
+        return window.localStorage;
+    } catch {
+        return null;
     }
-    return new WhiteboardDocument();
 }
 
+const storage = browserStorage();
 const editor = new Editor({
     board,
     canvas,
-    document: load(),
+    document: loadBoard(storage),
     initialTool: 'pen',
 });
-
-let saveTimer: ReturnType<typeof setTimeout> | undefined;
-function save(): void {
-    clearTimeout(saveTimer);
-    try {
-        localStorage.setItem(
-            STORAGE_KEY,
-            JSON.stringify(editor.document.toSnapshot())
-        );
-    } catch (error) {
-        console.warn('Could not save the whiteboard', error);
-    }
-}
-editor.document.subscribe(() => {
-    clearTimeout(saveTimer);
-    saveTimer = setTimeout(save, SAVE_DELAY);
-});
-window.addEventListener('pagehide', save);
+const saver = saveBoard(editor.document, storage);
+window.addEventListener('pagehide', () => saver.flush());
 
 // --- the dock and the style panel ---
 
