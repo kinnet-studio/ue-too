@@ -59,6 +59,18 @@ describe('the eraser', () => {
         expect(editor.document.all().map(s => s.id)).toEqual(['below']);
     });
 
+    it('a jittery tap still erases the topmost shape only', () => {
+        const solid = { color: 'ink', size: 'm', fill: 'solid' } as const;
+        const { editor } = eraserOn([
+            rect('below', { index: 'a', style: solid }),
+            rect('above', { index: 'b', style: solid }),
+        ]);
+        editor.input.down(mouse(50, 30));
+        editor.input.move(mouse(51, 30));
+        editor.input.up(mouse(51, 30));
+        expect(editor.document.all().map(s => s.id)).toEqual(['below']);
+    });
+
     it('cancel erases nothing', () => {
         const { editor } = eraserOn();
         editor.input.down(mouse(0, 50));

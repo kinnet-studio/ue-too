@@ -62,6 +62,8 @@ export interface ToolServices {
     shapeAt(world: Point): Shape | null;
     /** The shapes lying entirely inside a box */
     shapesInBox(box: Box): Shape[];
+    /** The shapes whose bounds overlap a box: a cheap first pass before hit-testing */
+    shapesNear(box: Box): Shape[];
     background: Required<Pick<EditorBackground, 'hitTest' | 'activate'>>;
     selection: Selection;
     /** The style the next shape gets */

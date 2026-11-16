@@ -28,38 +28,22 @@ export * from './render/theme';
 export * from './render/painter';
 export * from './render/overlay';
 
-export * from './editor/events';
-export * from './editor/pointer-input';
-export * from './editor/selection';
-export * from './editor/text-input';
-export * from './editor/keyboard';
 export {
-    type EditorBackground,
-    type ToolContext,
-    type ToolMachine,
-    type ToolOverlay,
-    type ToolServices,
-    type ToolStateConfig,
-    ToolState,
-    createToolMachine,
-    toolContext,
-} from './editor/tool-context';
+    TOOL_NAMES,
+    type PointerSample,
+    type ToolName,
+    type ToolPointer,
+} from './editor/events';
+export { PointerInput, type PointerInputDeps } from './editor/pointer-input';
 export {
-    type EditorMachineContext,
-    createEditorMachine,
-} from './editor/editor-machine';
+    DomTextInput,
+    type TextInput,
+    type TextInputSession,
+} from './editor/text-input';
 export {
-    type HandStates,
-    activateBackground,
-    createHandTool,
-} from './editor/tools/hand';
-export { type BoxStates, createBoxTool } from './editor/tools/box-tool';
-export {
-    type SegmentStates,
-    createSegmentTool,
-} from './editor/tools/segment-tool';
-export { type PenStates, createPenTool } from './editor/tools/pen';
-export { type SelectStates, createSelectTool } from './editor/tools/select';
-export { type EraserStates, createEraserTool } from './editor/tools/eraser';
-export { type PlaceStates, createPlaceTool } from './editor/tools/place-tool';
+    type EditorCommand,
+    type KeyLike,
+    shortcutFor,
+} from './editor/keyboard';
+export type { EditorBackground } from './editor/tool-context';
 export { Editor, type EditorOptions, type EditorState } from './editor/editor';

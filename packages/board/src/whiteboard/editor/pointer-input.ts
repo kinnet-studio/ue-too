@@ -51,7 +51,7 @@ interface Press {
  * screen-space controls own that spot. A second pointer during a gesture
  * cancels it, and everything is ignored until every pointer is up: two
  * fingers belong to the board's pinch and pan. A press becomes a drag past
- * {@link DRAG_SLOP} pixels; two clicks close in time and space also report
+ * 5 screen pixels; two clicks close in time and space also report
  * a `doubleClick`. A mouse hovering reports moves with `pressed: false`.
  *
  * @group Whiteboard Editor
@@ -202,6 +202,11 @@ export class PointerInput {
     lostCapture(id: number): void {
         if (this._press?.id !== id) return;
         this._press = null;
+        // Its pointerup may land elsewhere and never arrive: forget it now,
+        // or every later press would look like a second finger
+        this._down.delete(id);
+        if (this._ignored === id) this._ignored = null;
+        if (this._down.size === 0) this._swallow = false;
         this._deps.dispatch('cancel', {});
     }
 

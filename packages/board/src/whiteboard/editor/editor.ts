@@ -11,8 +11,8 @@ import {
     type ShapeStyle,
 } from '../document/types';
 import { shapeBounds } from '../geometry/bounds';
-import { type Box, boxesOverlap } from '../geometry/box';
-import { hitShape, shapesInBox } from '../geometry/hit-test';
+import { type Box, boxContainsBox, boxesOverlap } from '../geometry/box';
+import { hitShape } from '../geometry/hit-test';
 import {
     LINE_HEIGHT,
     NOTE_PADDING,
@@ -98,6 +98,15 @@ export interface EditorState {
     editingText: boolean;
 }
 
+function pointNearBox(p: Point, box: Box, reach: number): boolean {
+    return (
+        p.x >= box.x - reach &&
+        p.x <= box.x + box.w + reach &&
+        p.y >= box.y - reach &&
+        p.y <= box.y + box.h + reach
+    );
+}
+
 // Shapes are drawn when they come within this many screen pixels of the
 // view, so sketchy wobble at the edge isn't cut off
 const CULL_MARGIN_PX = 16;
@@ -148,19 +157,19 @@ export class Editor {
     readonly history: History;
     readonly input: PointerInput;
 
-    protected readonly _board: Board;
-    protected readonly _canvas: HTMLCanvasElement | undefined;
-    protected readonly _selection = new Selection();
-    protected readonly _overlay: ToolOverlay = {
+    private readonly _board: Board;
+    private readonly _canvas: HTMLCanvasElement | undefined;
+    private readonly _selection = new Selection();
+    private readonly _overlay: ToolOverlay = {
         marquee: null,
         erasing: new Set(),
     };
-    protected readonly _services: ToolServices;
-    protected readonly _env: TextEnv;
-    protected _style: ShapeStyle = { ...DEFAULT_STYLE };
-    protected _theme: WhiteboardTheme;
-    protected _editingId: string | null = null;
-    protected _textInput: TextInput | undefined;
+    private readonly _services: ToolServices;
+    private readonly _env: TextEnv;
+    private _style: ShapeStyle = { ...DEFAULT_STYLE };
+    private _theme: WhiteboardTheme;
+    private _editingId: string | null = null;
+    private _textInput: TextInput | undefined;
 
     private readonly _machine: ReturnType<typeof createEditorMachine>;
     private readonly _machineContext: EditorMachineContext;
@@ -240,6 +249,8 @@ export class Editor {
             this._selection.subscribe(() => this.emit())
         );
         if (this._canvas) this.listen(this._canvas);
+        // A board loaded with text needs the handwriting font straight away
+        this.loadHandFont();
     }
 
     /** The tool in use */
@@ -414,7 +425,7 @@ export class Editor {
     }
 
     /** The world box a shape covers, cached per record */
-    protected bounds(shape: Shape): Box {
+    private bounds(shape: Shape): Box {
         let box = this._bounds.get(shape);
         if (!box) {
             box = shapeBounds(shape, this._env);
@@ -424,7 +435,7 @@ export class Editor {
     }
 
     /** The selection box and handles to draw, while the select tool is picked */
-    protected selectionOverlay(): { selection: Box | null; handles: Handle[] } {
+    private selectionOverlay(): { selection: Box | null; handles: Handle[] } {
         if (this.tool !== 'select') return { selection: null, handles: [] };
         const shapes = this.selectedShapes();
         return {
@@ -434,7 +445,7 @@ export class Editor {
     }
 
     /** The style values every selected shape shares, or null with none selected */
-    protected sharedStyle(): Partial<ShapeStyle> | null {
+    private sharedStyle(): Partial<ShapeStyle> | null {
         const shapes = this.selectedShapes();
         if (shapes.length === 0) return null;
         const shared: Partial<ShapeStyle> = {};
@@ -448,13 +459,13 @@ export class Editor {
     }
 
     /** The selected shapes, in selection order */
-    protected selectedShapes(): Shape[] {
+    private selectedShapes(): Shape[] {
         return this._selection.ids
             .map(id => this.document.get(id))
             .filter((shape): shape is Shape => shape !== undefined);
     }
 
-    protected computeState(): EditorState {
+    private computeState(): EditorState {
         return {
             tool: this.tool,
             selection: this._selection.ids,
@@ -468,7 +479,7 @@ export class Editor {
     }
 
     /** Tells listeners when the state changed */
-    protected emit(): void {
+    private emit(): void {
         if (this._destroyed) return;
         this.loadHandFont();
         const state = this.computeState();
@@ -478,7 +489,7 @@ export class Editor {
     }
 
     /** Abandons the gesture under way, if any; text being typed is kept */
-    protected cancelGesture(): void {
+    private cancelGesture(): void {
         this.finishText();
         if (this.input.pressed) this.input.cancel();
         else this.dispatch('cancel', {});
@@ -486,7 +497,7 @@ export class Editor {
     }
 
     /** Starts editing a text shape's or note's text */
-    protected editText(id: string): void {
+    private editText(id: string): void {
         const shape = this.document.get(id);
         const input = this._textInput;
         if (!input || (shape?.type !== 'text' && shape?.type !== 'note'))
@@ -531,7 +542,7 @@ export class Editor {
     }
 
     /** Ends text editing, keeping what was typed */
-    protected finishText(): void {
+    private finishText(): void {
         if (this._textInput?.active) this._textInput.close();
     }
 
@@ -576,13 +587,25 @@ export class Editor {
                     HIT_TOLERANCE_PX / this._board.camera.zoomLevel;
                 const shapes = this.document.all();
                 for (let i = shapes.length - 1; i >= 0; i--) {
-                    if (hitShape(shapes[i]!, world, tolerance, this._env))
-                        return shapes[i]!;
+                    const shape = shapes[i]!;
+                    // Broad phase: only shapes whose box is within reach
+                    if (!pointNearBox(world, this.bounds(shape), tolerance)) {
+                        continue;
+                    }
+                    if (hitShape(shape, world, tolerance, this._env)) {
+                        return shape;
+                    }
                 }
                 return null;
             },
+            shapesNear: box =>
+                this.document
+                    .all()
+                    .filter(shape => boxesOverlap(this.bounds(shape), box)),
             shapesInBox: box =>
-                shapesInBox(this.document.all(), box, this._env),
+                this.document
+                    .all()
+                    .filter(shape => boxContainsBox(box, this.bounds(shape))),
             background: this._background,
             selection: this._selection,
             style: () => this._style,
@@ -599,7 +622,7 @@ export class Editor {
     }
 
     /** One machine per tool; later tasks fill in the ones still idle */
-    protected createToolMachines(): Record<ToolName, HostableStateMachine> {
+    private createToolMachines(): Record<ToolName, HostableStateMachine> {
         const machines = {} as Record<ToolName, HostableStateMachine>;
         for (const name of TOOL_NAMES) {
             machines[name] = this.createToolMachine(
@@ -610,7 +633,7 @@ export class Editor {
         return machines;
     }
 
-    protected createToolMachine(
+    private createToolMachine(
         name: ToolName,
         context: ToolContext
     ): HostableStateMachine {
@@ -789,6 +812,15 @@ export class Editor {
         canvas.addEventListener('pointercancel', cancel);
         canvas.addEventListener('lostpointercapture', lost);
         canvas.addEventListener('touchmove', touchMove, { passive: true });
+        // Text measured before a web font arrived has the fallback's widths
+        const fonts = canvas.ownerDocument.fonts;
+        const remeasure = () => {
+            this._bounds = new WeakMap();
+        };
+        fonts?.addEventListener('loadingdone', remeasure);
+        this._cleanup.push(() =>
+            fonts?.removeEventListener('loadingdone', remeasure)
+        );
         const keyDown = (e: KeyboardEvent) => this.handleKey(e);
         view?.addEventListener('keydown', keyDown);
         view?.addEventListener('blur', cancel);

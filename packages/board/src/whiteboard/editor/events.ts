@@ -61,7 +61,7 @@ export interface ToolPointer {
     delta: Point;
     /** Whether a press is under way (false for a mouse hovering) */
     pressed: boolean;
-    /** Whether the press has moved past {@link DRAG_SLOP} */
+    /** Whether the press has moved past 5 screen pixels */
     dragging: boolean;
     button: number;
     shiftKey: boolean;

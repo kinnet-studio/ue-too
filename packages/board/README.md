@@ -194,23 +194,37 @@ import { Editor, WhiteboardDocument } from '@ue-too/board/whiteboard';
 
 const canvas = document.querySelector('canvas') as HTMLCanvasElement;
 const board = new Board(canvas);
-const saved = localStorage.getItem('drawing');
-const editor = new Editor({
-    board,
-    canvas,
-    document: saved
-        ? WhiteboardDocument.fromSnapshot(JSON.parse(saved))
-        : new WhiteboardDocument(),
-});
 
+function loadDrawing(): WhiteboardDocument {
+    try {
+        const saved = localStorage.getItem('drawing');
+        if (saved) return WhiteboardDocument.fromSnapshot(JSON.parse(saved));
+    } catch {
+        // Unreadable, or saved by a newer version: start fresh. The old value
+        // stays stored until the first edit is saved over it
+    }
+    return new WhiteboardDocument();
+}
+
+const editor = new Editor({ board, canvas, document: loadDrawing() });
 editor.setTool('pen'); // or a toolbar calling setTool, setStyle, undo, redo, clear
 editor.subscribe(state => console.log(state.tool, state.canUndo));
-editor.document.subscribe(() =>
-    localStorage.setItem(
-        'drawing',
-        JSON.stringify(editor.document.toSnapshot())
-    )
-);
+
+// Save a moment after the drawing last changed, not on every pointer move
+let saveTimer: ReturnType<typeof setTimeout> | undefined;
+editor.document.subscribe(() => {
+    clearTimeout(saveTimer);
+    saveTimer = setTimeout(() => {
+        try {
+            localStorage.setItem(
+                'drawing',
+                JSON.stringify(editor.document.toSnapshot())
+            );
+        } catch {
+            // Storage is full or blocked; the board keeps working
+        }
+    }, 400);
+});
 
 function frame(timestamp: number) {
     board.step(timestamp);

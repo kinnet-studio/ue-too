@@ -1,5 +1,6 @@
 import type { Point } from '@ue-too/math';
 
+import { normalizeBox } from '../../geometry/box';
 import { hitShape } from '../../geometry/hit-test';
 import { HIT_TOLERANCE_PX } from '../events';
 import {
@@ -22,15 +23,25 @@ function markAlong(context: ToolContext, from: Point, to: Point): void {
         1,
         Math.ceil(Math.hypot(to.x - from.x, to.y - from.y) / tolerance)
     );
-    const shapes = context.doc.all();
-    for (let i = 1; i <= steps; i++) {
+    // Broad phase: only shapes near the stroke's box are tested
+    const path = normalizeBox(from.x, from.y, to.x, to.y);
+    const candidates = context
+        .shapesNear({
+            x: path.x - tolerance,
+            y: path.y - tolerance,
+            w: path.w + tolerance * 2,
+            h: path.h + tolerance * 2,
+        })
+        .filter(shape => !context.overlay.erasing.has(shape.id));
+    for (let i = 1; i <= steps && candidates.length > 0; i++) {
         const point = {
             x: from.x + ((to.x - from.x) * i) / steps,
             y: from.y + ((to.y - from.y) * i) / steps,
         };
-        for (const shape of shapes) {
-            if (hitShape(shape, point, tolerance, context.env)) {
-                context.overlay.erasing.add(shape.id);
+        for (let k = candidates.length - 1; k >= 0; k--) {
+            if (hitShape(candidates[k]!, point, tolerance, context.env)) {
+                context.overlay.erasing.add(candidates[k]!.id);
+                candidates.splice(k, 1);
             }
         }
     }
@@ -68,6 +79,8 @@ export function createEraserTool(
                 reactions: {
                     pointerMove: {
                         action: (ctx, p) => {
+                            // A tap jitters; only a drag sweeps
+                            if (!p.dragging) return;
                             markAlong(ctx, last, p.world);
                             last = p.world;
                         },

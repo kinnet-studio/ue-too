@@ -25,9 +25,10 @@ function setup(overrides: Partial<TextInputSession> = {}) {
         ...overrides,
     });
     const textarea = parent.querySelector('textarea')!;
-    const key = (k: string) => {
+    const key = (k: string, isComposing = false) => {
         const event = new dom.window.KeyboardEvent('keydown', {
             key: k,
+            isComposing,
             cancelable: true,
             bubbles: true,
         });
@@ -64,6 +65,13 @@ describe('DomTextInput', () => {
         expect(commits).toEqual(['Hi']);
         expect(parent.querySelector('textarea')).toBeNull();
         expect(input.active).toBe(false);
+    });
+
+    it('Escape during IME composition cancels the conversion, not editing', () => {
+        const { input, key, commits } = setup();
+        expect(key('Escape', true).defaultPrevented).toBe(false);
+        expect(commits).toEqual([]);
+        expect(input.active).toBe(true);
     });
 
     it('Enter adds a line', () => {

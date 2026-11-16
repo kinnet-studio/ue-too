@@ -86,6 +86,8 @@ export class DomTextInput implements TextInput {
             font: session.font,
             lineHeight: `${session.lineHeight}px`,
             whiteSpace: session.wrap ? 'pre-wrap' : 'pre',
+            // Long words break inside a line, as the canvas wraps them
+            overflowWrap: 'anywhere',
             transformOrigin: '0 0',
             zIndex: '1',
         });
@@ -97,7 +99,9 @@ export class DomTextInput implements TextInput {
         textarea.addEventListener('keydown', event => {
             // Keys typed here are text, not editor shortcuts
             event.stopPropagation();
-            if (event.key === 'Escape') {
+            // Mid-composition, Escape belongs to the IME (it cancels a conversion)
+            const composing = event.isComposing || event.keyCode === 229;
+            if (event.key === 'Escape' && !composing) {
                 event.preventDefault();
                 this.close();
             }

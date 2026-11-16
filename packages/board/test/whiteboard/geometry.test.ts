@@ -126,9 +126,33 @@ describe('text layout', () => {
         expect(lines.join(' ')).toBe('aaaa bbbb cccc dddd eeee');
     });
 
-    it('notes keep paragraphs and give long words their own line', () => {
+    it('notes keep paragraphs and break words too long for a line', () => {
         const n = note('n', { w: 100, text: 'a\n\nabcdefghijklmnop b' });
-        expect(textLines(n, env)).toEqual(['a', '', 'abcdefghijklmnop', 'b']);
+        expect(textLines(n, env)).toEqual([
+            'a',
+            '',
+            'abcde',
+            'fghij',
+            'klmno',
+            'p b',
+        ]);
+    });
+
+    it('notes wrap Japanese and Chinese text between characters', () => {
+        const value = 'これは日本語のメモです。長い文章も折り返します。';
+        const lines = textLines(note('n', { w: 200, text: value }), env);
+        expect(lines.length).toBe(2);
+        for (const l of lines) {
+            expect(
+                env.measure(l, textFont('m', env.family))
+            ).toBeLessThanOrEqual(200 - 2 * NOTE_PADDING);
+        }
+        expect(lines.join('')).toBe(value);
+        const mixed = textLines(
+            note('m', { w: 200, text: '筆記 note 便利貼便利貼便利貼' }),
+            env
+        );
+        expect(mixed.join('|')).toBe('筆記 note 便利貼便|利貼便利貼');
     });
 
     it('text splits on newlines only', () => {
@@ -210,6 +234,25 @@ describe('points', () => {
         expect(out[0]).toEqual(points[0]);
         expect(out.at(-1)).toEqual(points.at(-1));
         expect(out.length).toBeLessThan(100);
+    });
+
+    it('simplify keeps the turn of a stroke that doubles back', () => {
+        expect(
+            simplifyPoints(
+                [
+                    [0, 0],
+                    [50, 0],
+                    [100, 0],
+                    [75, 0],
+                    [50, 0.1],
+                ],
+                0.5
+            )
+        ).toEqual([
+            [0, 0],
+            [100, 0],
+            [50, 0.1],
+        ]);
     });
 
     it('simplify keeps corners', () => {

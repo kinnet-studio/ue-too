@@ -5,12 +5,23 @@
  */
 export type PointPair = [number, number];
 
-function distanceToLine(p: PointPair, a: PointPair, b: PointPair): number {
+// Distance from p to the segment a–b (not the infinite line through them),
+// so a stroke that runs past b and doubles back keeps its turning point
+function distanceToSegment(p: PointPair, a: PointPair, b: PointPair): number {
     const dx = b[0] - a[0];
     const dy = b[1] - a[1];
-    const length = Math.hypot(dx, dy);
-    if (length === 0) return Math.hypot(p[0] - a[0], p[1] - a[1]);
-    return Math.abs(dy * p[0] - dx * p[1] + b[0] * a[1] - b[1] * a[0]) / length;
+    const lengthSq = dx * dx + dy * dy;
+    const t =
+        lengthSq === 0
+            ? 0
+            : Math.max(
+                  0,
+                  Math.min(
+                      1,
+                      ((p[0] - a[0]) * dx + (p[1] - a[1]) * dy) / lengthSq
+                  )
+              );
+    return Math.hypot(p[0] - (a[0] + t * dx), p[1] - (a[1] + t * dy));
 }
 
 /**
@@ -36,7 +47,7 @@ export function simplifyPoints(
         let farthest = -1;
         let farthestDistance = tolerance;
         for (let i = first + 1; i < last; i++) {
-            const distance = distanceToLine(
+            const distance = distanceToSegment(
                 points[i]!,
                 points[first]!,
                 points[last]!

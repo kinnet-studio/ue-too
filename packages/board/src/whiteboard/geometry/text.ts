@@ -46,24 +46,79 @@ export function textFont(size: ShapeSize, family: string): string {
     return `700 ${FONT_SIZE[size]}px ${family}`;
 }
 
+// Chinese, Japanese and Korean characters (and full-width punctuation) can
+// break between any two of them, with no spaces
+const CJK = /[\u2E80-\u9FFF\uAC00-\uD7AF\uF900-\uFAFF\uFF00-\uFFEF]/u;
+
+interface Token {
+    text: string;
+    spaceBefore: boolean;
+}
+
+// Words split at spaces, with each CJK character a token of its own
+function tokenize(paragraph: string): Token[] {
+    const tokens: Token[] = [];
+    let word = '';
+    let wordSpace = false;
+    let space = false;
+    const flush = () => {
+        if (word) tokens.push({ text: word, spaceBefore: wordSpace });
+        word = '';
+    };
+    for (const char of paragraph) {
+        if (char === ' ') {
+            flush();
+            space = true;
+        } else if (CJK.test(char)) {
+            flush();
+            tokens.push({ text: char, spaceBefore: space });
+            space = false;
+        } else {
+            if (!word) {
+                wordSpace = space;
+                space = false;
+            }
+            word += char;
+        }
+    }
+    flush();
+    return tokens;
+}
+
 function wrapParagraph(
     paragraph: string,
     maxWidth: number,
     font: string,
     measure: TextMeasure
 ): string[] {
+    const fits = (text: string) => measure(text, font) <= maxWidth;
     const lines: string[] = [];
     let line = '';
-    for (const word of paragraph.split(' ')) {
-        const next = line ? `${line} ${word}` : word;
-        if (line && measure(next, font) > maxWidth) {
-            lines.push(line);
-            line = word;
-        } else {
-            line = next;
+    for (const token of tokenize(paragraph)) {
+        const joined = line
+            ? line + (token.spaceBefore ? ' ' : '') + token.text
+            : token.text;
+        if (fits(joined)) {
+            line = joined;
+            continue;
         }
+        if (line) lines.push(line);
+        // A word too wide for a line of its own breaks between characters
+        let rest = Array.from(token.text);
+        while (rest.length > 0 && !fits(rest.join(''))) {
+            let count = 1;
+            while (
+                count < rest.length &&
+                fits(rest.slice(0, count + 1).join(''))
+            ) {
+                count++;
+            }
+            lines.push(rest.slice(0, count).join(''));
+            rest = rest.slice(count);
+        }
+        line = rest.join('');
     }
-    lines.push(line);
+    if (line || lines.length === 0) lines.push(line);
     return lines;
 }
 
@@ -72,8 +127,8 @@ function wrapParagraph(
  *
  * @remarks
  * Text breaks only at newlines. A note also wraps each paragraph to its
- * width less {@link NOTE_PADDING} on each side; a word too long for the
- * width gets a line of its own.
+ * width less {@link NOTE_PADDING} on each side: at spaces, between Chinese,
+ * Japanese and Korean characters, and inside a word too long for a line.
  *
  * @group Whiteboard Geometry
  */

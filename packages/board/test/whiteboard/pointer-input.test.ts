@@ -127,6 +127,16 @@ describe('PointerInput', () => {
         expect(names().at(-1)).toBe('cancel');
     });
 
+    it('lost capture forgets the pointer, so the next finger draws', () => {
+        const { input, names } = setup();
+        input.down(touch(11, 0, 0));
+        input.move(touch(11, 20, 0));
+        input.lostCapture(11);
+        // Its pointerup lands off the canvas and never arrives
+        input.down(touch(12, 0, 0));
+        expect(names().at(-1)).toBe('pointerDown');
+    });
+
     it('cancel ends the gesture and forgets every pointer', () => {
         const { input, names } = setup();
         input.down(touch(1, 0, 0));
