@@ -2,6 +2,7 @@ import {
     CameraView,
     DEFAULT_ZOOM_PAN_RHO,
     ZoomPanPath,
+    createWorldAnchorZoomPanPath,
     createZoomPanPath,
 } from '../../src/camera';
 
@@ -237,5 +238,51 @@ describe('createZoomPanPath', () => {
                 RangeError
             );
         }
+    });
+});
+
+describe('createWorldAnchorZoomPanPath', () => {
+    const from: CameraView = {
+        position: { x: 100, y: -80 },
+        zoomLevel: 0.45,
+    };
+    const to: CameraView = {
+        position: { x: 560, y: 100 },
+        zoomLevel: 3,
+    };
+
+    it('interpolates the projected target and zoom with the same progress', () => {
+        const path = createWorldAnchorZoomPanPath(from, to);
+        for (const t of [0, 0.1, 0.5, 0.9, 1]) {
+            const view = path.at(t);
+            expect(view.zoomLevel).toBeCloseTo(0.45 + 2.55 * t);
+            expect(
+                (to.position.x - view.position.x) * view.zoomLevel
+            ).toBeCloseTo(207 * (1 - t));
+            expect(
+                (to.position.y - view.position.y) * view.zoomLevel
+            ).toBeCloseTo(81 * (1 - t));
+        }
+    });
+
+    it('preserves exact endpoints and clamps progress', () => {
+        const path = createWorldAnchorZoomPanPath(from, to);
+        expect(path.at(-1)).toEqual(from);
+        expect(path.at(NaN)).toEqual(from);
+        expect(path.at(1)).toEqual(to);
+        expect(path.at(2)).toEqual(to);
+        expect(path.at(0).position).not.toBe(from.position);
+    });
+
+    it('rejects an invalid zoom level or position', () => {
+        expect(() =>
+            createWorldAnchorZoomPanPath(from, { ...to, zoomLevel: 0 })
+        ).toThrow(RangeError);
+        expect(() =>
+            createWorldAnchorZoomPanPath(
+                { ...from, position: { x: Infinity, y: 0 } },
+                to
+            )
+        ).toThrow(RangeError);
     });
 });
