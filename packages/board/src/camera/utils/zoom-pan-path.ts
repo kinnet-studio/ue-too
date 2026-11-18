@@ -236,3 +236,81 @@ export function createZoomPanPath(
         },
     };
 }
+
+/**
+ * Creates a zoom-and-pan path that interpolates the scene in viewport space.
+ *
+ * @param from - Start view
+ * @param to - Target view. Set its position to the world point to center.
+ * @returns A sampler with the same `at(t)` interface as {@link createZoomPanPath}.
+ * Progress is clamped to [0, 1], and NaN gives the start view.
+ * @throws RangeError if a position is non-finite or a zoom level is non-positive or non-finite.
+ *
+ * @remarks
+ * Zoom and the viewport projection of every world point interpolate with the
+ * same progress. With a fixed viewport size and rotation, a world point moves
+ * along a straight line on screen as the view zooms. A point visible at both
+ * endpoints stays visible throughout. Camera limits can change the result
+ * when the sampled view is applied.
+ *
+ * @example
+ * ```typescript
+ * const path = createWorldAnchorZoomPanPath(currentView, {
+ *     position: targetWorldPoint,
+ *     zoomLevel: 3,
+ * });
+ * const view = path.at(easedProgress);
+ * rig.zoomTo(view.zoomLevel);
+ * rig.panToWorld(view.position);
+ * ```
+ *
+ * @category Camera
+ */
+export function createWorldAnchorZoomPanPath(
+    from: CameraView,
+    to: CameraView
+): Pick<ZoomPanPath, 'at'> {
+    assertPositiveFinite(from.zoomLevel, 'from.zoomLevel');
+    assertPositiveFinite(to.zoomLevel, 'to.zoomLevel');
+    assertFinitePoint(from.position, 'from.position');
+    assertFinitePoint(to.position, 'to.position');
+
+    const start = { position: { ...from.position }, zoomLevel: from.zoomLevel };
+    const end = { position: { ...to.position }, zoomLevel: to.zoomLevel };
+
+    return {
+        at(t: number): CameraView {
+            if (!(t > 0)) {
+                return {
+                    position: { ...start.position },
+                    zoomLevel: start.zoomLevel,
+                };
+            }
+            if (t >= 1) {
+                return {
+                    position: { ...end.position },
+                    zoomLevel: end.zoomLevel,
+                };
+            }
+
+            const zoomLevel =
+                start.zoomLevel +
+                (end.zoomLevel - start.zoomLevel) * t;
+            // Solving for the camera center after interpolating the projected
+            // world anchor gives this zoom-weighted blend of the two centers.
+            const endWeight = (end.zoomLevel * t) / zoomLevel;
+            const startWeight = 1 - endWeight;
+            return {
+                position: {
+                    x:
+                        start.position.x * startWeight +
+                        end.position.x * endWeight,
+                    y:
+                        start.position.y * startWeight +
+                        end.position.y * endWeight,
+                },
+                zoomLevel,
+            };
+        },
+    };
+}
